@@ -11,6 +11,7 @@ RUN apt-get update -qq && apt-get -y --no-install-recommends install \
 RUN pip3 install altair
 
 RUN install2.r --error \
+  DT \
   ggplot2 \
   RCurl \
   RMariaDB \
