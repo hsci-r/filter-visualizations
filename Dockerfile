@@ -32,6 +32,9 @@ COPY app.R /srv/shiny-server/
 COPY config.yaml /srv/shiny-server/
 COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
 
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+
 # --------------------------------------------------------
 #
 # copy over the startup script
