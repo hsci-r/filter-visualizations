@@ -12,7 +12,7 @@ library(yaml)
 message('DB_HOST: ', Sys.getenv('DB_HOST'))
 message('DB_USER: ', Sys.getenv('DB_USER'))
 
-options(shiny.sanitize.errors = FALSE)
+options(shiny.sanitize.errors = FALSE, encoding='utf-8')
 
 config <- read_yaml('config.yaml')
 
@@ -44,7 +44,7 @@ query_octavo <- function(endpoint, query, fields, grouping.var, limit=20, offset
     '&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0',
     '&level=LINE&sort=score&sortDirection=D&format=csv')
   result <- getURL(URL, .encoding='UTF-8')
-  read.csv(text = result, stringsAsFactors=F) %>%
+  read.csv(text = result, stringsAsFactors=F, encoding='utf-8') %>%
     group_by_at(grouping.var) %>%
     summarize(y = n()) %>%
     rename(x = grouping.var)
