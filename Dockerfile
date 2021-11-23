@@ -28,7 +28,6 @@ RUN install2.r --error \
   pacman
 
 COPY app.R /srv/shiny-server/
-COPY app.Rdata /srv/shiny-server/
 COPY R/ /srv/shiny-server/R
 COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
 
