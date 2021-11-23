@@ -58,6 +58,7 @@ read_areas <- function() {
                    password=Sys.getenv('DB_PASS'),
                    dbname=Sys.getenv('DB_NAME'),
                    bigint='integer')
+  dbExecute(con, 'SET NAMES utf8;')
   q <- 'select name as parish_name, ST_AsBinary(geometry) as geometry from polygons;'
   df <- st_read(con, query=q, geometry_column='geometry')
   st_crs(df) <- 'urn:ogc:def:crs:EPSG::3857'
