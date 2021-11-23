@@ -9,14 +9,21 @@ library(stringi)
 library(tmap)
 library(yaml)
 
+message('DB_HOST: ', Sys.getenv('DB_HOST'))
+message('DB_USER: ', Sys.getenv('DB_USER'))
+
 options(shiny.sanitize.errors = FALSE)
 
 config <- read_yaml('config.yaml')
 
 query_db <- function(q) {
-  con <- dbConnect(MariaDB(), host=Sys.getenv('DB_HOST'), dbname='filter',
-                 user=Sys.getenv('DB_USER'), password=Sys.getenv('DB_PASS'),
-                 bigint='integer')
+  con <- dbConnect(MariaDB(),
+                   host=Sys.getenv('DB_HOST'),
+                   port=as.integer(Sys.getenv('DB_PORT')),
+                   user=Sys.getenv('DB_USER'),
+                   password=Sys.getenv('DB_PASS'),
+                   dbname=Sys.getenv('DB_NAME'),
+                   bigint='integer')
   res <- dbSendQuery(con, q)
   data <- dbFetch(res)
   dbClearResult(res)
@@ -43,9 +50,13 @@ query_octavo <- function(endpoint, query, fields, grouping.var, limit=20, offset
 }
 
 read_areas <- function() {
-  con <- dbConnect(MariaDB(), host=Sys.getenv('DB_HOST'), dbname='filter',
-                 user=Sys.getenv('DB_USER'), password=Sys.getenv('DB_PASS'),
-                 bigint='integer')
+  con <- dbConnect(MariaDB(),
+                   host=Sys.getenv('DB_HOST'),
+                   port=as.integer(Sys.getenv('DB_PORT')),
+                   user=Sys.getenv('DB_USER'),
+                   password=Sys.getenv('DB_PASS'),
+                   dbname=Sys.getenv('DB_NAME'),
+                   bigint='integer')
   q <- 'select name as parish_name, ST_AsBinary(geometry) as geometry from polygons;'
   df <- st_read(con, query=q, geometry_column='geometry')
   st_crs(df) <- 'urn:ogc:def:crs:EPSG::3857'
