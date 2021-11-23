@@ -1,0 +1,62 @@
+global:
+  octavo_endpoint: https://octavo-acathoth.rahtiapp.fi/skvr/
+visualizations:
+  map_npoems:
+    type: map
+    description: 'map: Number of poems'
+    source: sql
+    query: 'SELECT loc_orig_id, name AS x, count(*) AS y
+            FROM locations l
+              JOIN p_loc ON l.loc_id = p_loc.loc_id
+            GROUP BY l.loc_id;'
+  map_type:
+    type: map
+    description: 'map: Number of poems by type'
+    source: sql
+    query: 'SELECT l.name AS x, count(*) AS y
+            FROM poem_theme pt
+              JOIN themes t ON pt.t_id = t.t_id
+              JOIN p_loc ON pt.p_id = p_loc.p_id
+              JOIN locations l ON p_loc.loc_id = l.loc_id
+            WHERE t.theme_id = "@theme_id" GROUP BY l.loc_id;'
+    params:
+      - name: theme_id
+        description: 'Type ID'
+        widget: textInput
+  map_octavo:
+    type: map
+    description: 'map: Custom Octavo query'
+    source: octavo
+    query: '@octavo_query'
+    fields:
+      - place
+    group_by: place
+    params:
+      - name: octavo_query
+        description: 'Query'
+        widget: textAreaInput
+        rows: 5
+  map_custom_sql:
+    type: map
+    description: 'map: Custom SQL query'
+    source: sql
+    query: '@query'
+    params:
+      - name: query
+        description: 'Query'
+        widget: textAreaInput
+        rows: 5
+  plot_top_collectors:
+    type: barplot
+    description: 'plot: Top collectors'
+    source: sql
+    query: 'SELECT c.name AS x, count(*) AS y
+            FROM collectors c
+              JOIN p_col ON c.col_id = p_col.col_id
+            GROUP BY c.col_id
+            ORDER BY y DESC
+            LIMIT @num_collectors;'
+    params:
+      - name: num_collectors
+        description: 'Number of collectors to show'
+        widget: numericInput
