@@ -24,6 +24,7 @@ query_db <- function(q) {
                    password=Sys.getenv('DB_PASS'),
                    dbname=Sys.getenv('DB_NAME'),
                    bigint='integer')
+  dbExecute(con, 'SET NAMES utf8;')
   res <- dbSendQuery(con, q)
   data <- dbFetch(res)
   dbClearResult(res)
