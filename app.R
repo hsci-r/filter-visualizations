@@ -185,6 +185,8 @@ ui <- function(request) {
       lapply(sb_vis_widgets_lst, make_vis_params_panel),
       lapply(sb_vistype_widgets_lst, make_vistype_params_panel),
       list(
+        downloadButton('dlData', 'Data'),
+        downloadButton('dlMap', 'Map'),
         hiddenIf(!interactive,
           actionButton(inputId = 'refresh', label='Refresh',
                        icon = icon('sync'), class='btn-primary')
@@ -266,12 +268,21 @@ server <- function(input, output, session) {
     )
   }) %>%
   bindEvent(input$refresh, ignoreNULL=F)
-  output$tmap <- renderTmap({
+  tmap <- reactive({
     tm_shape(
       areas %>% left_join(df(), by=c('parish_name' = 'x'))
     ) + tm_polygons(col="y", id="parish_name",
                     palette=input$map_palette, style=input$map_style)
   })
+  dl_filename <- reactive({
+    params <- config$visualizations[[input$vis]]$params
+    values <- sapply(params, function(x) as.character(input[[x$name]]))
+    stri_replace_all_charclass(
+      paste(c(input$vis, values), collapse='_'),
+      '[*:\\p{WHITE_SPACE}]', '_'
+    )
+  })
+  output$tmap <- renderTmap({ tmap() })
   output$plot <- renderPlot({
     ggplot(df(), aes(x, y)) + geom_bar(stat='identity') + coord_flip()
   })
@@ -289,6 +300,20 @@ server <- function(input, output, session) {
     tags$a(href=url, 'permalink')
   }) %>%
     bindEvent(input$refresh, ignoreNULL=T)
+  output$dlData <- downloadHandler(
+    filename = function() paste0(dl_filename(), '.csv'),
+    content = function(file) {
+      write.csv(df(), file, row.names=F)
+    },
+    contentType = 'text/csv'
+  )
+  output$dlMap <- downloadHandler(
+    filename = function() paste0(dl_filename(), '.png'),
+    content = function(file) {
+      tmap_save(tmap(), filename = file)
+    },
+    contentType = 'image/png'
+  )
 }
 
 shinyApp(ui = ui, server = server, enableBookmarking = "url")
