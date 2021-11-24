@@ -44,6 +44,6 @@ COPY passwd.template /passwd.template
 COPY shiny-server.sh /usr/bin/shiny-server.sh
 RUN chmod a+x /usr/bin/shiny-server.sh && mkdir -p /var/log/shiny-server && chmod a+rwx /var/log/shiny-server && mkdir -p /var/lib/shiny-server/bookmarks/shiny && chmod a+rwx /srv/shiny-server && chmod a+rwx /usr/local/lib/R/site-library
 # RUN env | grep DB_ > /srv/shiny-server/.Renviron
-RUN chown shiny /srv/shiny-server/.Renviron
+# RUN chown shiny /srv/shiny-server/.Renviron
 CMD ["/usr/bin/shiny-server.sh"]
 
