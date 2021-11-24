@@ -23,6 +23,41 @@ visualizations:
       - name: theme_id
         description: 'Type ID'
         widget: textInput
+  map_collector:
+    type: map
+    description: 'map: Number of poems by collector'
+    source: sql
+    query: 'SELECT l.name AS x, count(*) AS y
+            FROM p_col
+              JOIN collectors c ON p_col.col_id = c.col_id
+              JOIN p_loc ON p_col.p_id = p_loc.p_id
+              JOIN locations l ON p_loc.loc_id = l.loc_id
+            WHERE c.name = "@collector" GROUP BY l.loc_id;'
+    params:
+      - name: collector
+        description: 'Collector name'
+        widget: textInput
+  map_cluster:
+    type: map
+    description: 'map: Verse cluster'
+    source: sql
+    query: 'SELECT l.name AS x, count(*) AS y
+            FROM verse_poem vp1
+              JOIN poems p1 ON vp1.p_id = p1.p_id
+              JOIN v_clust vc1 ON vc1.v_id = vp1.v_id
+              JOIN v_clust vc2 ON vc1.clust_id = vc2.clust_id
+              JOIN verse_poem vp2 ON vp2.v_id = vc2.v_id
+              JOIN p_loc ON p_loc.p_id = vp2.p_id
+              JOIN locations l ON l.loc_id = p_loc.loc_id
+            WHERE p1.nro = "@nro" AND vp1.pos = @pos
+            GROUP BY l.loc_id;'
+    params:
+      - name: nro
+        description: 'Poem ID'
+        widget: textInput
+      - name: pos
+        description: 'Verse position'
+        widget: numericInput
   map_octavo:
     type: map
     description: 'map: Custom Octavo query'
