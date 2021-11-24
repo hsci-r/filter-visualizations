@@ -97,6 +97,8 @@ make_input <- function(x) {
   w <- switch(x$widget,
     'numericInput' = numericInput(inputId = x$name, label = x$description,
                                   value = x$value),
+    'selectInput' = selectInput(inputId = x$name, label = x$description,
+                                choices=x$choices, selected=x$default),
     'textInput' = textInput(inputId = x$name, label = x$description,
                             value = x$value),
     'textAreaInput' = textAreaInput(inputId = x$name, label = x$description,
@@ -105,11 +107,22 @@ make_input <- function(x) {
   disableIf(!is.null(x$value), w)
 }
 
-make_params_panel <- function(x) {
+make_vis_params_panel <- function(x) {
   do.call(
     conditionalPanel,
     c(list(
       condition = paste0('input.vis == "', x$name, '"')
+      ),
+      lapply(x$params, make_input)
+    )
+  )
+}
+
+make_vistype_params_panel <- function(x) {
+  do.call(
+    conditionalPanel,
+    c(list(
+      condition = paste0('input.vis.startsWith("', x$name, '")')
       ),
       lapply(x$params, make_input)
     )
@@ -138,17 +151,24 @@ ui <- function(request) {
     route = if (is.null(qp$route)) '' else qp$route
     interactive <- is.null(qp$vis)
 
-    sb_widgets_lst <- config$visualizations
-    for (n in names(sb_widgets_lst)) {
-      sb_widgets_lst[[n]]$name <- n
+    sb_vis_widgets_lst <- config$visualizations
+    for (n in names(sb_vis_widgets_lst)) {
+      sb_vis_widgets_lst[[n]]$name <- n
     }
     if (!interactive) {
-      for (i in 1:(length(sb_widgets_lst[[qp$vis]]$params))) {
-        sb_widgets_lst[[qp$vis]]$params[[i]]$value <-
-          qp[[sb_widgets_lst[[qp$vis]]$params[[i]]$name]]
+      for (i in 1:(length(sb_vis_widgets_lst[[qp$vis]]$params))) {
+        sb_vis_widgets_lst[[qp$vis]]$params[[i]]$value <-
+          qp[[sb_vis_widgets_lst[[qp$vis]]$params[[i]]$name]]
       }
     }
-    names(sb_widgets_lst) <- NULL
+    names(sb_vis_widgets_lst) <- NULL
+
+    sb_vistype_widgets_lst <- config$visualization_types
+    for (n in names(sb_vistype_widgets_lst)) {
+      sb_vistype_widgets_lst[[n]]$name <- n
+    }
+    names(sb_vistype_widgets_lst) <- NULL
+
     sidebar_widgets = c(
       list(
         disableIf(!interactive,
@@ -156,28 +176,15 @@ ui <- function(request) {
             inputId = 'vis',
             label = 'Visualization', 
             choices = c('Select...' = '',
-                        setNames(sapply(sb_widgets_lst, function(x) x$name),
-                                 sapply(sb_widgets_lst, function(x) x$description))),
+                        setNames(sapply(sb_vis_widgets_lst, function(x) x$name),
+                                 sapply(sb_vis_widgets_lst, function(x) x$description))),
             selected = qp$vis
           )
         )
       ),
-      lapply(sb_widgets_lst, make_params_panel),
+      lapply(sb_vis_widgets_lst, make_vis_params_panel),
+      lapply(sb_vistype_widgets_lst, make_vistype_params_panel),
       list(
-        conditionalPanel('input.vis.startsWith("map_")',
-          selectInput(
-            inputId = 'map_style',
-            label = 'Style',
-            choices = c('equal', 'fisher'),
-            selected = 'fisher'
-          ),
-          selectInput(
-            inputId = 'map_palette',
-            label = 'palette',
-            choices = c('YlOrRd', 'plasma'),
-            selected = 'YlOrRd'
-          )
-        ),
         hiddenIf(!interactive,
           actionButton(inputId = 'refresh', label='Refresh',
                        icon = icon('sync'), class='btn-primary')

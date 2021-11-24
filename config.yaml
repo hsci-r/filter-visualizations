@@ -95,3 +95,18 @@ visualizations:
       - name: num_collectors
         description: 'Number of collectors to show'
         widget: numericInput
+visualization_types:
+  map:
+    params:
+      - name: map_style
+        description: Style
+        widget: selectInput
+        choices: [ cat, cont, sd, equal, fisher, jenks, log10, order, pretty ]
+        default: fisher
+      - name: map_palette
+        description: Palette
+        widget: selectInput
+        choices: [ YlOrRd, YlOrBr, YlGnBu, YlGn, Reds, Oranges, Greens, Blues,
+                   plasma, viridis, Set1, Set2, Set3, Accent ]
+        default: YlOrRd
+  barplot:
