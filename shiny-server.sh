@@ -7,6 +7,9 @@ export LD_PRELOAD=libnss_wrapper.so
 export NSS_WRAPPER_PASSWD=/tmp/passwd
 export NSS_WRAPPER_GROUP=/etc/group
 
+# pass the environment variables for DB access to the R session
+env | grep DB_ > /srv/shiny-server/.Renviron
+
 if [ "$APPLICATION_LOGS_TO_STDOUT" = "false" ];
 then
     exec shiny-server 2>&1
