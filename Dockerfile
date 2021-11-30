@@ -30,6 +30,7 @@ RUN install2.r --error \
 
 COPY app.R /srv/shiny-server/
 COPY config.yaml /srv/shiny-server/
+COPY R/ /srv/shiny-server/R
 COPY shiny-server.conf /etc/shiny-server/shiny-server.conf
 
 # --------------------------------------------------------
