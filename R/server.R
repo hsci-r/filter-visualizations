@@ -53,45 +53,47 @@ read_areas <- function() {
   st_make_valid(df)
 }
 
+make_query <- function(input, visualization) {
+  ifelse(
+    is.null(visualization$params),
+    visualization$query,
+    stri_replace_all_regex(
+      visualization$query,
+      paste0('@', sapply(visualization$params, function(x) x$name)),
+      sapply(visualization$params, function(x) input[[x$name]]),
+      vectorize_all=F
+    )
+  )
+}
+
 server <- function(input, output, session) {
   config <- read_yaml('config.yaml')
   tmap_options(check.and.fix=T)
   areas <- read_areas()
   is.interactive <- reactive(as.logical(input$interactive))
+
+  # data
   df <- reactive({
     req(input$vis)
     v <- config$visualizations[[input$vis]]
-    query <- ifelse(
-      is.null(v$params),
-      v$query,
-      stri_replace_all_regex(
-        v$query,
-        paste0('@', sapply(v$params, function(x) x$name)),
-        sapply(v$params, function(x) input[[x$name]]),
-        vectorize_all=F
-      )
-    )
+    q <- make_query(input, v)
     switch(v$source,
-      'sql' = query_db(query),
-      'octavo' = query_octavo(config$global$octavo_endpoint, query, v$fields, v$group_by, limit=-1)
+      'sql' = query_db(q),
+      'octavo' = query_octavo(config$global$octavo_endpoint, q, v$fields, v$group_by, limit=-1)
     )
   }) %>%
   bindEvent(input$refresh, ignoreNULL=F)
+
+  # map
   tmap <- reactive({
     tm_shape(
       areas %>% left_join(df(), by=c('parish_name' = 'x'))
     ) + tm_polygons(col="y", id="parish_name",
                     palette=input$map_palette, style=input$map_style)
   })
-  dl_filename <- reactive({
-    params <- config$visualizations[[input$vis]]$params
-    values <- sapply(params, function(x) as.character(input[[x$name]]))
-    stri_replace_all_charclass(
-      paste(c(input$vis, values), collapse='_'),
-      '[*:\\p{WHITE_SPACE}]', '_'
-    )
-  })
   output$tmap <- renderTmap({ tmap() })
+
+  # other outputs
   output$plot <- renderPlot({
     ggplot(df(), aes(x, y)) + geom_bar(stat='identity') + coord_flip()
   })
@@ -109,6 +111,16 @@ server <- function(input, output, session) {
     tags$a(href=url, 'permalink')
   }) %>%
     bindEvent(input$refresh, ignoreNULL=T)
+
+  # download handlers
+  dl_filename <- reactive({
+    params <- config$visualizations[[input$vis]]$params
+    values <- sapply(params, function(x) as.character(input[[x$name]]))
+    stri_replace_all_charclass(
+      paste(c(input$vis, values), collapse='_'),
+      '[*:\\p{WHITE_SPACE}]', '_'
+    )
+  })
   output$dlData <- downloadHandler(
     filename = function() paste0(dl_filename(), '.csv'),
     content = function(file) {
