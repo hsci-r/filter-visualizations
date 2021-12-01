@@ -81,6 +81,66 @@ visualizations:
         description: 'Query'
         widget: textAreaInput
         rows: 5
+  tree_types:
+    type: tree
+    description: 'tree: Poems by type'
+    source: sql
+    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
+                   SUM(IF(pt.p_id IS NULL, 0, 1)) AS y
+            FROM
+              themes t
+              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
+              LEFT JOIN themes tp ON tp.t_id = t.par_id
+            WHERE t.theme_id LIKE "@dataset_%"
+                  AND t.theme_id NOT LIKE "erab_orig%"
+                  AND t.theme_id NOT LIKE "kt_%"
+            GROUP BY t.t_id;'
+    params:
+      - name: dataset
+        description: 'Dataset'
+        widget: selectInput
+        choices: [ skvr, erab ]
+        default: skvr_
+  tree_types_col:
+    type: tree
+    description: 'tree: Poems by type for collector'
+    source: sql
+    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
+                   SUM(IF(c.name = "@t_collector", 1, 0)) AS y
+            FROM
+              themes t
+              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
+              LEFT JOIN p_col pc ON pt.p_id = pc.p_id
+              LEFT JOIN collectors c ON pc.col_id = c.col_id
+              LEFT JOIN themes tp ON tp.t_id = t.par_id
+            WHERE pc.col_id IS NULL OR c.name = "@t_collector"
+                  AND t.theme_id NOT LIKE "erab_orig%"
+                  AND t.theme_id NOT LIKE "kt_%"
+            GROUP BY t.t_id;'
+    params:
+      - name: t_collector
+        description: 'Collector name'
+        widget: textInput
+  tree_types_parish:
+    type: tree
+    description: 'tree: Poems by type for parish'
+    source: sql
+    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
+                   SUM(IF(l.name = "@t_parish", 1, 0)) AS y
+            FROM
+              themes t
+              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
+              LEFT JOIN p_loc ON pt.p_id = p_loc.p_id
+              LEFT JOIN locations l ON p_loc.loc_id = l.loc_id
+              LEFT JOIN themes tp ON tp.t_id = t.par_id
+            WHERE p_loc.loc_id IS NULL OR l.name = "@t_parish"
+                  AND t.theme_id NOT LIKE "erab_orig%"
+                  AND t.theme_id NOT LIKE "kt_%"
+            GROUP BY t.t_id;'
+    params:
+      - name: t_parish
+        description: 'Parish name'
+        widget: textInput
   plot_top_collectors:
     type: barplot
     description: 'plot: Top collectors'
@@ -109,4 +169,11 @@ visualization_types:
         choices: [ YlOrRd, YlOrBr, YlGnBu, YlGn, Reds, Oranges, Greens, Blues,
                    plasma, viridis, Set1, Set2, Set3, Accent ]
         default: YlOrRd
+  tree:
+    params:
+      - name: tree_type
+        description: Type
+        widget: radioButtons
+        choices: [ treemap, sunburst ]
+        default: treemap
   barplot:

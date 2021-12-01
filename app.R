@@ -1,3 +1,4 @@
+library(plotly)
 library(shiny)
 library(shinyjs)
 library(tmap)

@@ -29,6 +29,8 @@ make_input <- function(x) {
   w <- switch(x$widget,
     'numericInput' = numericInput(inputId = x$name, label = x$description,
                                   value = x$value),
+    'radioButtons' = radioButtons(inputId = x$name, label = x$description,
+                                  choices = x$choices, selected = x$default),
     'selectInput' = selectInput(inputId = x$name, label = x$description,
                                 choices=x$choices, selected=x$default),
     'textInput' = textInput(inputId = x$name, label = x$description,
@@ -165,6 +167,20 @@ ui <- function(request) {
                                      })
                       $(window).resize(function(e) {
                         $("#',"plot",'").height(window.innerHeight-125)
+                      })
+                    ')))
+                )
+              ),
+              conditionalPanel('input.vis.startsWith("tree_")',
+                tagList(
+                  plotlyOutput('tree'),
+                  tags$script(HTML(paste0('
+                      $(document).on("shiny:connected",
+                                     function(e) {
+                                       $("#',"tree",'").height(window.innerHeight-125)
+                                     })
+                      $(window).resize(function(e) {
+                        $("#',"tree",'").height(window.innerHeight-125)
                       })
                     ')))
                 )

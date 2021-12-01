@@ -94,6 +94,19 @@ server <- function(input, output, session) {
   output$tmap <- renderTmap({ tmap() })
 
   # other outputs
+  output$tree <- renderPlotly({
+    # compute totals for categories higher in the hierarchy
+    df <- df()
+    df2 <- df %>%
+      left_join(df, by=c('x' = 'parent'), suffix=c('', '.1'), na_matches='never') %>%
+      left_join(df, by=c('x.1' = 'parent'), suffix=c('', '.2'), na_matches='never') %>%
+      left_join(df, by=c('x.2' = 'parent'), suffix=c('', '.3'), na_matches='never') %>%
+      group_by(x, label, parent) %>%
+      summarize(y = sum(y, na.rm=T) + sum(y.1, na.rm=T) + sum(y.2, na.rm=T) + sum(y.3, na.rm=T)) %>%
+      filter(y > 0)
+    plot_ly(df2, ids=~x, labels=~label, parents=~parent, values=~y,
+            type=input$tree_type, branchvalues='total')
+  })
   output$plot <- renderPlot({
     ggplot(df(), aes(x, y)) + geom_bar(stat='identity') + coord_flip()
   })
