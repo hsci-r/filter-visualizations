@@ -137,7 +137,7 @@ ui <- function(request) {
     fluidPage(
       useShinyjs(),
       resizeDetection(), 
-      titlePanel("FILTER Shiny App"),
+      titlePanel("FILTER Visualizations"),
 
       sidebarLayout(
 
