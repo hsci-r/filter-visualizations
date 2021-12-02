@@ -48,7 +48,8 @@ make_vis_params_panel <- function(x) {
   do.call(
     conditionalPanel,
     c(list(
-      condition = paste0('input.vis == "', x$name, '"')
+      condition = paste0('input.vis == "', x$name, '"'),
+      helpText(x$helptext)
       ),
       lapply(x$params, make_input)
     )

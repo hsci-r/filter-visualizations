@@ -94,6 +94,8 @@ visualizations:
     type: map
     description: 'map: Custom SQL query'
     source: sql
+    helptext: 'The resulting table should contain the following columns:
+               `x` for parish name and `y` for the value to display.'
     query: '@query'
     params:
       - name: query
