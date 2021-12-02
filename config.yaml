@@ -135,7 +135,7 @@ visualizations:
               LEFT JOIN collectors c ON pc.col_id = c.col_id
               LEFT JOIN themes tp ON tp.t_id = t.par_id
             WHERE pc.col_id IS NULL OR c.name = "@t_collector"
-                  AND t.theme_id NOT LIKE "erab_orig%"
+                  AND (@t_col_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
                   AND t.theme_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
@@ -143,46 +143,56 @@ visualizations:
         description: 'Collector name'
         widget: selectizeInput
         choices_query: collectors
+      - name: t_col_incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
   tree_types_parish:
     type: tree
     description: 'tree: Poems by type for parish'
     source: sql
     query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
-                   SUM(IF(l.name = "@t_parish", 1, 0)) AS y
+                   SUM(IF(l.name = "@t_parish_name", 1, 0)) AS y
             FROM
               themes t
               LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
               LEFT JOIN p_loc ON pt.p_id = p_loc.p_id
               LEFT JOIN locations l ON p_loc.loc_id = l.loc_id
               LEFT JOIN themes tp ON tp.t_id = t.par_id
-            WHERE p_loc.loc_id IS NULL OR l.name = "@t_parish"
-                  AND t.theme_id NOT LIKE "erab_orig%"
+            WHERE p_loc.loc_id IS NULL OR l.name = "@t_parish_name"
+                  AND (@t_parish_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
                   AND t.theme_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
-      - name: t_parish
+      - name: t_parish_name
         description: 'Parish name'
         widget: selectizeInput
         choices_query: places
+      - name: t_parish_incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
   tree_types_cooc:
     type: tree
     description: 'tree: Co-occurring types'
     source: sql
     query: 'SELECT t1.theme_id AS x, t1.name AS label, t1p.theme_id AS parent,
-                   SUM(IF(t2.theme_id = "@t_theme", 1, 0)) AS y
+                   SUM(IF(t2.theme_id = "@t_theme_id", 1, 0)) AS y
             FROM
               themes t1
               LEFT JOIN poem_theme pt1 ON pt1.t_id = t1.t_id
               LEFT JOIN poem_theme pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
               LEFT JOIN themes t2 ON pt2.t_id = t2.t_id
               LEFT JOIN themes t1p ON t1.par_id = t1p.t_id
-            WHERE pt1.p_id IS NULL OR t2.theme_id = "@t_theme"
+            WHERE pt1.p_id IS NULL OR t2.theme_id = "@t_theme_id"
+                  AND (@t_theme_incl_erab_orig OR t1.theme_id NOT LIKE "erab_orig%")
             GROUP BY t1.t_id;'
     params:
-      - name: t_theme
+      - name: t_theme_id
         description: 'Type'
         widget: selectizeInput
         choices_query: themes
+      - name: t_theme_incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
   plot_top_collectors:
     type: barplot
     description: 'plot: Top collectors'

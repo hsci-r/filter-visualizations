@@ -27,6 +27,9 @@ submitIf <- function(condition) {
 
 make_input <- function(x) {
   w <- switch(x$widget,
+    'checkboxInput' = checkboxInput(inputId = x$name, label = x$description,
+                                    value = ifelse(is.null(x$value),
+                                                   FALSE, as.logical(x$value))),
     'numericInput' = numericInput(inputId = x$name, label = x$description,
                                   value = x$value),
     'radioButtons' = radioButtons(inputId = x$name, label = x$description,
