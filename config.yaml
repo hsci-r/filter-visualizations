@@ -25,10 +25,17 @@ visualizations:
     source: sql
     query: 'SELECT l.name AS x, count(*) AS y
             FROM poem_theme pt
-              JOIN themes t ON pt.t_id = t.t_id
+              JOIN themes t1 ON pt.t_id = t1.t_id
+              LEFT JOIN themes t2 ON t1.par_id = t2.t_id
+              LEFT JOIN themes t3 ON t2.par_id = t3.t_id
+              LEFT JOIN themes t4 ON t3.par_id = t4.t_id
               JOIN p_loc ON pt.p_id = p_loc.p_id
               JOIN locations l ON p_loc.loc_id = l.loc_id
-            WHERE t.theme_id = "@theme_id" GROUP BY l.loc_id;'
+            WHERE t1.theme_id = "@theme_id"
+                  OR t2.theme_id = "@theme_id"
+                  OR t3.theme_id = "@theme_id"
+                  OR t4.theme_id = "@theme_id"
+            GROUP BY l.loc_id;'
     params:
       - name: theme_id
         description: 'Type ID'
