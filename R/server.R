@@ -148,6 +148,9 @@ server <- function(input, output, session) {
     },
     contentType = 'image/png'
   )
+
+  observeEvent(input$vis, toggleState('dlMap', grepl('map_', input$vis)))
+
   chq <- lapply(config$choices_queries, query_db)
   observeEvent(input$vis, {
     v <- config$visualizations[[input$vis]]

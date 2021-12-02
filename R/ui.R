@@ -124,7 +124,7 @@ ui <- function(request) {
       lapply(sb_vistype_widgets_lst, make_vistype_params_panel),
       list(
         downloadButton('dlData', 'Data'),
-        downloadButton('dlMap', 'Map'),
+        disabled(downloadButton('dlMap', 'Map')),
         hiddenIf(!interactive,
           actionButton(inputId = 'refresh', label='Refresh',
                        icon = icon('sync'), class='btn-primary')
