@@ -1,5 +1,15 @@
 global:
   octavo_endpoint: https://octavo-acathoth.rahtiapp.fi/skvr/
+choices_queries:
+  collectors: 'SELECT name AS value FROM collectors;'
+  places: 'SELECT IF(lp.name IS NOT NULL,
+                     CONCAT(l.name, " (", lp.name, ")"),
+                     l.name) as label,
+                  l.name as value
+           FROM locations l
+             LEFT JOIN locations lp ON l.par_id = lp.loc_id;'
+  themes: 'SELECT CONCAT(name, " (", theme_id, ")") as label, theme_id as value
+           FROM themes;'
 visualizations:
   map_npoems:
     type: map
@@ -22,7 +32,8 @@ visualizations:
     params:
       - name: theme_id
         description: 'Type ID'
-        widget: textInput
+        widget: selectizeInput
+        choices_query: themes
   map_collector:
     type: map
     description: 'map: Number of poems by collector'
@@ -36,7 +47,8 @@ visualizations:
     params:
       - name: collector
         description: 'Collector name'
-        widget: textInput
+        widget: selectizeInput
+        choices_query: collectors
   map_cluster:
     type: map
     description: 'map: Verse cluster'
@@ -120,7 +132,8 @@ visualizations:
     params:
       - name: t_collector
         description: 'Collector name'
-        widget: textInput
+        widget: selectizeInput
+        choices_query: collectors
   tree_types_parish:
     type: tree
     description: 'tree: Poems by type for parish'
@@ -140,7 +153,8 @@ visualizations:
     params:
       - name: t_parish
         description: 'Parish name'
-        widget: textInput
+        widget: selectizeInput
+        choices_query: places
   plot_top_collectors:
     type: barplot
     description: 'plot: Top collectors'

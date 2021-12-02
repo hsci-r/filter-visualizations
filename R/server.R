@@ -148,4 +148,18 @@ server <- function(input, output, session) {
     },
     contentType = 'image/png'
   )
+  chq <- lapply(config$choices_queries, query_db)
+  observeEvent(input$vis, {
+    v <- config$visualizations[[input$vis]]
+    for (p in v$params) {
+      if (!is.null(p$choices_query)) {
+        if (input[[p$name]] == '') {
+          updateSelectizeInput(
+            session, p$name, server=T,
+            choices = c('Select...' = '', setNames(chq[[p$choices_query]]$value,
+                                                   chq[[p$choices_query]]$label)))
+        }
+      }
+    }
+  })
 }
