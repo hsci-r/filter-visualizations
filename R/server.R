@@ -117,7 +117,11 @@ server <- function(input, output, session) {
       '/?',
       paste(
         c('vis', sapply(params, function(x) x$name)),
-        c(input$vis, sapply(params, function(x) URLencode(as.character(input[[x$name]])))),
+        c(input$vis,
+          sapply(params, function(x) URLencode(as.character(input[[x$name]]),
+                                               reserved=T)
+          )
+        ),
         sep = '=', collapse = '&'
       )
     )
