@@ -56,6 +56,25 @@ visualizations:
         description: 'Collector name'
         widget: selectizeInput
         choices_query: collectors
+  map_time_int:
+    type: map
+    description: 'map: Number of poems in a time interval'
+    source: sql
+    query: 'SELECT l.name AS x, count(*) AS y
+            FROM p_year
+              JOIN p_loc ON p_year.p_id = p_loc.p_id
+              JOIN locations l ON p_loc.loc_id = l.loc_id
+            WHERE p_year.year BETWEEN @map_year_min AND @map_year_max
+            GROUP BY l.loc_id;'
+    params:
+      - name: map_year_min
+        description: From year
+        widget: numericInput
+        default: 1800
+      - name: map_year_max
+        description: To year
+        widget: numericInput
+        default: 1930
   map_cluster:
     type: map
     description: 'map: Verse cluster'
