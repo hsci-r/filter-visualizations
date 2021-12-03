@@ -87,6 +87,18 @@ resizeDetection <- function() {
     '))
 }
 
+resizeScript <- function(output) {
+  tags$script(HTML(paste0('
+      $(document).on("shiny:connected",
+                     function(e) {
+                       $("#',output,'").height(window.innerHeight-125)
+                     })
+      $(window).resize(function(e) {
+        $("#',output,'").height(window.innerHeight-125)
+      })
+    ')))
+}
+
 ui <- function(request) {
     config <- read_yaml('config.yaml')
     qp <- parseQueryString(request$QUERY_STRING)
@@ -153,43 +165,19 @@ ui <- function(request) {
               conditionalPanel('input.vis.startsWith("map_")',
                 tagList(
                   tmapOutput('tmap'),
-                  tags$script(HTML(paste0('
-                      $(document).on("shiny:connected",
-                                     function(e) {
-                                       $("#',"tmap",'").height(window.innerHeight-125)
-                                     })
-                      $(window).resize(function(e) {
-                        $("#',"tmap",'").height(window.innerHeight-125)
-                      })
-                    ')))
+                  resizeScript('tmap')
                 )
               ),
               conditionalPanel('input.vis.startsWith("plot_")',
                 tagList(
                   plotOutput('plot'),
-                  tags$script(HTML(paste0('
-                      $(document).on("shiny:connected",
-                                     function(e) {
-                                       $("#',"plot",'").height(window.innerHeight-125)
-                                     })
-                      $(window).resize(function(e) {
-                        $("#',"plot",'").height(window.innerHeight-125)
-                      })
-                    ')))
+                  resizeScript('plot')
                 )
               ),
               conditionalPanel('input.vis.startsWith("tree_")',
                 tagList(
                   plotlyOutput('tree'),
-                  tags$script(HTML(paste0('
-                      $(document).on("shiny:connected",
-                                     function(e) {
-                                       $("#',"tree",'").height(window.innerHeight-125)
-                                     })
-                      $(window).resize(function(e) {
-                        $("#',"tree",'").height(window.innerHeight-125)
-                      })
-                    ')))
+                  resizeScript('tree')
                 )
               )
             ),
