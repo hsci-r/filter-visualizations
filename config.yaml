@@ -207,6 +207,21 @@ visualizations:
       - name: num_collectors
         description: 'Number of collectors to show'
         widget: numericInput
+  timeline_parish:
+    type: timeline
+    description: 'timeline: Parish'
+    source: sql
+    query: 'SELECT year AS x, COUNT(*) AS y
+            FROM p_year
+              NATURAL JOIN p_loc
+              NATURAL JOIN locations
+            WHERE name = "@tl_parish_name"
+            GROUP BY year;'
+    params:
+      - name: tl_parish_name
+        description: 'Parish'
+        widget: selectizeInput
+        choices_query: places
 visualization_types:
   map:
     params:
@@ -221,6 +236,20 @@ visualization_types:
         choices: [ YlOrRd, YlOrBr, YlGnBu, YlGn, Reds, Oranges, Greens, Blues,
                    plasma, viridis, Set1, Set2, Set3, Accent ]
         default: YlOrRd
+  timeline:
+    params:
+      - name: tl_min
+        description: From year
+        widget: numericInput
+        default: 1800
+      - name: tl_max
+        description: To year
+        widget: numericInput
+        default: 1930
+      - name: tl_by
+        description: By
+        widget: radioButtons
+        choices: [ decade, year ]
   tree:
     params:
       - name: tree_type
