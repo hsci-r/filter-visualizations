@@ -106,10 +106,12 @@ server <- function(input, output, session) {
 
   # map
   tmap <- reactive({
+    breaks <- sapply(unlist(stri_split_fixed(input$map_breaks, ',')), as.numeric)
     tm_shape(
       areas %>% left_join(df(), by=c('parish_name' = 'x'))
     ) + tm_polygons(col="y", id="parish_name",
-                    palette=input$map_palette, style=input$map_style)
+                    palette=input$map_palette, style=input$map_style,
+                    breaks=breaks)
   })
   output$tmap <- renderTmap({ tmap() })
 

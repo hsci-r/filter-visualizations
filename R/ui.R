@@ -33,6 +33,7 @@ getvalue <- function (x) {
   }
 }
 
+
 make_input <- function(x) {
   w <- switch(x$widget,
     'checkboxInput' = checkboxInput(inputId = x$name, label = x$description,
@@ -52,7 +53,11 @@ make_input <- function(x) {
     'textAreaInput' = textAreaInput(inputId = x$name, label = x$description,
                                     rows=x$rows, value=x$value)
   )
-  disableIf(!is.null(x$value), w)
+  w <- disableIf(!is.null(x$value), w)
+  if (!is.null(x$condition)) {
+    w <- conditionalPanel(x$condition, w)
+  }
+  w
 }
 
 make_vis_params_panel <- function(x) {

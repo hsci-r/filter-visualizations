@@ -247,8 +247,12 @@ visualization_types:
       - name: map_style
         description: Style
         widget: selectInput
-        choices: [ cat, cont, sd, equal, fisher, jenks, log10, order, pretty ]
+        choices: [ cat, cont, sd, equal, fisher, fixed, log10, order, pretty ]
         default: fisher
+      - name: map_breaks
+        description: Breaks (comma-separated)
+        condition: 'input.map_style == "fixed"'
+        widget: textInput
       - name: map_palette
         description: Palette
         widget: selectInput
