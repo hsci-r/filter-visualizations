@@ -219,6 +219,49 @@ visualizations:
       - name: t_theme_incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
+  tree_types_cluster:
+    type: tree
+    description: 'tree: Verse cluster type distribution'
+    source: sql
+    query: 'SELECT x, label, parent, MAX(y) AS y
+            FROM
+             (SELECT
+                t.t_id, t.theme_id AS x, t.name AS label, tp.theme_id AS parent, COUNT(*) AS y
+              FROM
+                poems p
+                JOIN verse_poem vp ON vp.p_id = p.p_id
+                JOIN v_clust vc ON vc.v_id = vp.v_id
+                                   AND vc.clustering_id = @t_theme_clustering
+                JOIN v_clust vc2 ON vc2.clust_id = vc.clust_id
+                                    AND vc2.clustering_id = @t_theme_clustering
+                JOIN verse_poem vp2 ON vc2.v_id = vp2.v_id
+                JOIN poem_theme pt2 ON vp2.p_id = pt2.p_id
+                JOIN themes t ON pt2.t_id = t.t_id
+                JOIN themes tp ON t.par_id = tp.t_id
+              WHERE p.nro = "@t_theme_nro" AND vp.pos = @t_theme_pos
+              GROUP BY t.t_id
+              UNION
+              SELECT
+               t.t_id, t.theme_id AS x, t.name AS label, tp.theme_id AS parent, 0 AS y
+              FROM
+               themes t
+               LEFT JOIN themes tp ON t.par_id = tp.t_id) tbl
+            GROUP BY
+              x, label, parent;'
+    params:
+      - name: t_theme_clustering
+        description: 'Clustering'
+        widget: selectizeInput
+        choices_query: clusterings
+      - name: t_theme_nro
+        description: 'Poem ID'
+        widget: textInput
+      - name: t_theme_pos
+        description: 'Verse position'
+        widget: numericInput
+      - name: t_theme_incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
   plot_top_collectors:
     type: barplot
     description: 'plot: Top collectors'
