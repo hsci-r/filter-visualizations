@@ -10,6 +10,7 @@ choices_queries:
              LEFT JOIN locations lp ON l.par_id = lp.loc_id;'
   themes: 'SELECT CONCAT(name, " (", theme_id, ")") as label, theme_id as value
            FROM themes;'
+  clusterings: 'SELECT name AS label, clustering_id AS value FROM v_clusterings;'
 visualizations:
   map_npoems:
     type: map
@@ -83,13 +84,19 @@ visualizations:
             FROM verse_poem vp1
               JOIN poems p1 ON vp1.p_id = p1.p_id
               JOIN v_clust vc1 ON vc1.v_id = vp1.v_id
+                                  AND vc1.clustering_id = @clustering
               JOIN v_clust vc2 ON vc1.clust_id = vc2.clust_id
+                                  AND vc2.clustering_id = @clustering
               JOIN verse_poem vp2 ON vp2.v_id = vc2.v_id
               JOIN p_loc ON p_loc.p_id = vp2.p_id
               JOIN locations l ON l.loc_id = p_loc.loc_id
             WHERE p1.nro = "@nro" AND vp1.pos = @pos
             GROUP BY l.loc_id;'
     params:
+      - name: clustering
+        description: 'Clustering'
+        widget: selectizeInput
+        choices_query: clusterings
       - name: nro
         description: 'Poem ID'
         widget: textInput
