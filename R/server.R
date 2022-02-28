@@ -166,14 +166,14 @@ server <- function(input, output, session) {
     )
   })
   output$dlData <- downloadHandler(
-    filename = function() paste0(dl_filename(), '.csv'),
+    filename = function() paste0(substr(dl_filename(), 1, 50), '.csv'),
     content = function(file) {
       write.csv(df(), file, row.names=F)
     },
     contentType = 'text/csv'
   )
   output$dlMap <- downloadHandler(
-    filename = function() paste0(dl_filename(), '.png'),
+    filename = function() paste0(substr(dl_filename(), 1, 50), '.png'),
     content = function(file) {
       tmap_save(tmap(), filename = file)
     },
