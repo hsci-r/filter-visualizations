@@ -167,6 +167,19 @@ visualizations:
         description: 'Query'
         widget: textAreaInput
         rows: 5
+  map_custom_csv:
+    type: map
+    description: 'map: Custom CSV'
+    source: csv
+    helptext: 'The CSV should contain at least the following columns:
+               `x` for parish name and `y` for the value to display.
+               Header is obligatory.'
+    query: '@csv'
+    params:
+      - name: csv
+        description: 'Paste CSV here'
+        widget: textAreaInput
+        rows: 5
   tree_types:
     type: tree
     description: 'tree: Poems by type'

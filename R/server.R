@@ -98,6 +98,7 @@ server <- function(input, output, session) {
     v <- config$visualizations[[input$vis]]
     q <- make_query(input, v)
     switch(v$source,
+      'csv' = read.csv(text = q),
       'sql' = query_db(q),
       'octavo' = query_octavo(config$global$octavo_endpoint, q, v$fields, v$group_by, limit=-1)
     )
