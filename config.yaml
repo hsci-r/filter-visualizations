@@ -95,6 +95,26 @@ visualizations:
         description: To year
         widget: numericInput
         default: 1930
+  map_word:
+    type: map
+    description: 'map: Word frequency'
+    source: sql
+    query: 'SELECT l.name AS x, count(*) AS y
+            FROM words w
+              JOIN word_occ wo ON w.w_id = wo.w_id
+              JOIN verse_poem vp ON wo.v_id = vp.v_id
+              JOIN p_loc ON vp.p_id = p_loc.p_id
+              JOIN locations l ON p_loc.loc_id = l.loc_id
+            WHERE w.text @operator "@word"
+            GROUP BY l.loc_id;'
+    params:
+      - name: word
+        description: 'Word'
+        widget: textInput
+      - name: operator
+        description: 'Operator'
+        widget: selectInput
+        choices: ['=', 'LIKE', 'REGEXP']
   map_cluster:
     type: map
     description: 'map: Verse cluster'
