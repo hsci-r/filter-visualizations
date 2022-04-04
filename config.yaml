@@ -11,6 +11,9 @@ choices_queries:
   themes: 'SELECT CONCAT(name, " (", theme_id, ")") as label, theme_id as value
            FROM themes;'
   clusterings: 'SELECT name AS label, clustering_id AS value FROM v_clusterings;'
+  skvr_volumes: 'SELECT DISTINCT value
+                 FROM raw_meta NATURAL JOIN poems
+                 WHERE nro LIKE "skvr%" AND field = "OSA";'
 visualizations:
   map_npoems:
     type: map
@@ -42,6 +45,22 @@ visualizations:
         description: 'Type ID'
         widget: selectizeInput
         choices_query: themes
+  map_volume:
+    type: map
+    description: 'map: Number of poems by SKVR volume'
+    source: sql
+    query: 'SELECT l.name AS x, count(*) AS y
+            FROM poems p
+              JOIN raw_meta rm ON p.p_id = rm.p_id AND rm.field = "OSA"
+              JOIN p_loc ON p.p_id = p_loc.p_id
+              JOIN locations l ON p_loc.loc_id = l.loc_id
+            WHERE p.nro LIKE "skvr%" AND rm.value = "@volume"
+            GROUP BY l.loc_id;'
+    params:
+      - name: volume
+        description: 'Volume'
+        widget: selectizeInput
+        choices_query: skvr_volumes
   map_collector:
     type: map
     description: 'map: Number of poems by collector'
@@ -196,6 +215,25 @@ visualizations:
       - name: t_parish_incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
+  tree_types_volume:
+    type: tree
+    description: 'tree: Poems by type for SKVR volume'
+    source: sql
+    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
+                   SUM(IF(rm.value = "@t_volume", 1, 0)) AS y
+            FROM
+              themes t
+              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
+              LEFT JOIN poems p ON pt.p_id = p.p_id
+              LEFT JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
+              LEFT JOIN themes tp ON tp.t_id = t.par_id
+            WHERE p.p_id IS NULL OR (rm.value = "@t_volume" AND p.nro LIKE "skvr%")
+            GROUP BY t.t_id;'
+    params:
+      - name: t_volume
+        description: 'Volume'
+        widget: selectizeInput
+        choices_query: skvr_volumes
   tree_types_cooc:
     type: tree
     description: 'tree: Co-occurring types'
