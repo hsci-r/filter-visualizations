@@ -105,7 +105,7 @@ visualizations:
               JOIN verse_poem vp ON wo.v_id = vp.v_id
               JOIN p_loc ON vp.p_id = p_loc.p_id
               JOIN locations l ON p_loc.loc_id = l.loc_id
-            WHERE BINARY w.text @operator "@word"
+            WHERE w.text @operator "@word"
             GROUP BY l.loc_id;'
     params:
       - name: word
