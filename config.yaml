@@ -19,10 +19,20 @@ visualizations:
     type: map
     description: 'map: Number of poems'
     source: sql
-    query: 'SELECT loc_orig_id, name AS x, count(*) AS y
-            FROM locations l
-              JOIN p_loc ON l.loc_id = p_loc.loc_id
-            GROUP BY l.loc_id;'
+    query: 'SELECT name AS x, npoems AS y
+            FROM locations NATURAL JOIN location_stats;'
+  map_nverses:
+    type: map
+    description: 'map: Number of verses'
+    source: sql
+    query: 'SELECT name AS x, nverses AS y
+            FROM locations NATURAL JOIN location_stats;'
+  map_nwords:
+    type: map
+    description: 'map: Number of words'
+    source: sql
+    query: 'SELECT name AS x, nwords AS y
+            FROM locations NATURAL JOIN location_stats;'
   map_type:
     type: map
     description: 'map: Number of poems by type'
@@ -112,6 +122,27 @@ visualizations:
         description: 'Word'
         widget: textInput
       - name: operator
+        description: 'Operator'
+        widget: selectInput
+        choices: ['=', 'LIKE', 'REGEXP']
+  map_word_rel:
+    type: map
+    description: 'map: Word relative frequency'
+    source: sql
+    query: 'SELECT l.name AS x, count(*)/ls.nwords AS y
+            FROM words w
+              JOIN word_occ wo ON w.w_id = wo.w_id
+              JOIN verse_poem vp ON wo.v_id = vp.v_id
+              JOIN p_loc ON vp.p_id = p_loc.p_id
+              JOIN locations l ON p_loc.loc_id = l.loc_id
+              JOIN location_stats ls ON l.loc_id = ls.loc_id
+            WHERE w.text @rf_operator "@rf_word"
+            GROUP BY l.loc_id;'
+    params:
+      - name: rf_word
+        description: 'Word'
+        widget: textInput
+      - name: rf_operator
         description: 'Operator'
         widget: selectInput
         choices: ['=', 'LIKE', 'REGEXP']
