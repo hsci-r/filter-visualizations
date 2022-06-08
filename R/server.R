@@ -27,7 +27,7 @@ query_db <- function(q) {
   data
 }
 
-query_octavo <- function(endpoint, query, fields, grouping.var, limit=20, offset=0) {
+query_octavo <- function(endpoint, query, level, fields, grouping.var, limit=20, offset=0) {
   URL <- paste0(
     endpoint,
     'search??pretty&endpoint=',
@@ -106,7 +106,10 @@ server <- function(input, output, session) {
     switch(v$source,
       'csv' = read.csv(text = q),
       'sql' = query_db(q),
-      'octavo' = query_octavo(config$global$octavo_endpoint, q, v$fields, v$group_by, limit=-1)
+      # FIXME match between the widget "octavo_level" and the Octavo
+      # parameter "level" is hardcoded here!
+      'octavo' = query_octavo(config$global$octavo_endpoint, q,
+                              input$octavo_level, v$fields, v$group_by, limit=-1)
     )
   }) %>%
   bindEvent(input$refresh, ignoreNULL=F)

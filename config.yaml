@@ -201,6 +201,10 @@ visualizations:
         description: 'Query'
         widget: textAreaInput
         rows: 5
+      - name: octavo_level
+        description: 'Level'
+        widget: selectInput
+        choices: [ VERSE, POEM ]
   map_custom_sql:
     type: map
     description: 'map: Custom SQL query'
