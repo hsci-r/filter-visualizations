@@ -1,5 +1,5 @@
 global:
-  octavo_endpoint: https://octavo-acathoth.rahtiapp.fi/skvr/
+  octavo_endpoint: https://filter-octavo.rahtiapp.fi/filter/
 choices_queries:
   collectors: 'SELECT name AS value FROM collectors;'
   places: 'SELECT IF(lp.name IS NOT NULL,
@@ -194,8 +194,8 @@ visualizations:
     source: octavo
     query: '@octavo_query'
     fields:
-      - place
-    group_by: place
+      - place_name
+    group_by: place_name
     params:
       - name: octavo_query
         description: 'Query'

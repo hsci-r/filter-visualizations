@@ -4,6 +4,7 @@ library(RCurl)
 library(RMariaDB)
 library(sf)
 library(stringi)
+library(yaml)
 
 connect_to_db <- function() {
   con <- dbConnect(MariaDB(),
@@ -36,12 +37,17 @@ query_octavo <- function(endpoint, query, fields, grouping.var, limit=20, offset
     paste0('&field=', fields, collapse=''),
     '&offset=', offset, '&limit=', limit,
     '&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0',
-    '&level=LINE&sort=score&sortDirection=D&format=csv')
-  result <- getURL(URL, .encoding='UTF-8')
-  read.csv(text = result, stringsAsFactors=F, encoding='utf-8') %>%
-    group_by_at(grouping.var) %>%
-    summarize(y = n()) %>%
-    rename(x = grouping.var)
+    '&level=', level, '&sort=score&sortDirection=D')
+  # did you know: JSON is also YAML
+  r <- yaml.load(getURL(URL, .encoding='UTF-8')) 
+  x <- unlist(lapply(r$result$docs, function(d) d[[grouping.var]]))
+  # for place names: "Parish, County" -> "Parish"
+  if (grouping.var == 'place_name') {
+    x <- stri_replace_all_regex(x, ', .*', '')
+  }
+  data.frame(x = x) %>%
+    group_by(x) %>%
+    summarize(y = n())
 }
 
 read_areas <- function() {
