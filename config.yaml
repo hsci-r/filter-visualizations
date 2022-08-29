@@ -424,6 +424,11 @@ visualization_types:
         description: Breaks (comma-separated)
         condition: 'input.map_style == "fixed"'
         widget: textInput
+      - name: map_classes
+        description: Number of classes
+        condition: 'input.map_style != "fixed"'
+        widget: numericInput
+        default: 5
       - name: map_palette
         description: Palette
         widget: selectInput

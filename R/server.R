@@ -121,7 +121,7 @@ server <- function(input, output, session) {
       areas %>% left_join(df(), by=c('parish_name' = 'x'))
     ) + tm_polygons(col="y", id="parish_name",
                     palette=input$map_palette, style=input$map_style,
-                    breaks=breaks)
+                    n = input$map_classes, breaks=breaks)
   })
   output$tmap <- renderTmap({ tmap() })
 
