@@ -418,7 +418,7 @@ visualization_types:
       - name: map_style
         description: Style
         widget: selectInput
-        choices: [ cat, cont, sd, equal, fisher, fixed, log10, order, pretty ]
+        choices: [ cat, cont, sd, equal, fisher, fixed, log10, order, quantile, pretty ]
         default: fisher
       - name: map_breaks
         description: Breaks (comma-separated)
