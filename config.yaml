@@ -441,7 +441,6 @@ visualization_types:
       - name: map_var
         description: Variable name
         widget: textInput
-        default: y
   timeline:
     params:
       - name: tl_min
