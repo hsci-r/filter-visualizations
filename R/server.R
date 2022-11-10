@@ -213,15 +213,23 @@ server <- function(input, output, session) {
     },
     contentType = 'text/csv'
   )
-  output$dlMap <- downloadHandler(
+  output$dlMapPNG <- downloadHandler(
     filename = function() paste0(substr(dl_filename(), 1, 50), '.png'),
     content = function(file) {
       tmap_save(tmap(), filename = file)
     },
     contentType = 'image/png'
   )
+  output$dlMapSVG <- downloadHandler(
+    filename = function() paste0(substr(dl_filename(), 1, 50), '.svg'),
+    content = function(file) {
+      tmap_save(tmap(), filename = file)
+    },
+    contentType = 'image/svg'
+  )
 
-  observeEvent(input$vis, toggleState('dlMap', grepl('map_', input$vis)))
+  observeEvent(input$vis, toggleState('dlMapSVG', grepl('map_', input$vis)))
+  observeEvent(input$vis, toggleState('dlMapPNG', grepl('map_', input$vis)))
 
   chq <- lapply(config$choices_queries, query_db)
   observeEvent(input$vis, {
