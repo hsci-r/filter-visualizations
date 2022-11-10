@@ -59,6 +59,11 @@ read_areas <- function() {
   st_make_valid(df)
 }
 
+read_themes <- function() {
+  query_db(paste0('select t.theme_id, t.name, tp.theme_id as parent ',
+                  'from themes t left join themes tp on t.par_id = tp.t_id;'))
+}
+
 make_query <- function(input, visualization) {
   ifelse(
     is.null(visualization$params),
@@ -96,6 +101,7 @@ server <- function(input, output, session) {
   config <- read_yaml('config.yaml')
   tmap_options(check.and.fix=T)
   areas <- read_areas()
+  themes <- read_themes()
   is.interactive <- reactive(as.logical(input$interactive))
 
   # data
@@ -127,20 +133,29 @@ server <- function(input, output, session) {
   })
   output$tmap <- renderTmap({ tmap() })
 
-  # other outputs
+  # type tree
   output$tree <- renderPlotly({
-    # compute totals for categories higher in the hierarchy
     df <- df()
-    df2 <- df %>%
-      left_join(df, by=c('x' = 'parent'), suffix=c('', '.1'), na_matches='never') %>%
-      left_join(df, by=c('x.1' = 'parent'), suffix=c('', '.2'), na_matches='never') %>%
-      left_join(df, by=c('x.2' = 'parent'), suffix=c('', '.3'), na_matches='never') %>%
-      group_by(x, label, parent) %>%
-      summarize(y = sum(y, na.rm=T) + sum(y.1, na.rm=T) + sum(y.2, na.rm=T) + sum(y.3, na.rm=T)) %>%
+    # join with the table of all types (to have the info about the hierarchy)
+    df2 <- themes %>%
+      left_join(df, by=c('theme_id' = 'x'), suffix=c('', '.y'))
+    # compute totals for categories higher in the hierarchy
+    df3 <- df2 %>%
+      left_join(df2, by=c('theme_id' = 'parent'),
+                suffix=c('', '.1'), na_matches='never') %>%
+      left_join(df2, by=c('theme_id.1' = 'parent'),
+                suffix=c('', '.2'), na_matches='never') %>%
+      left_join(df2, by=c('theme_id.2' = 'parent'),
+                suffix=c('', '.3'), na_matches='never') %>%
+      group_by(theme_id, name, parent) %>%
+      summarize(y = sum(y, na.rm=T) + sum(y.1, na.rm=T)
+                    + sum(y.2, na.rm=T) + sum(y.3, na.rm=T)) %>%
       filter(y > 0)
-    plot_ly(df2, ids=~x, labels=~label, parents=~parent, values=~y,
+    plot_ly(df3, ids=~theme_id, labels=~name, parents=~parent, values=~y,
             type=input$tree_type, branchvalues='total')
   })
+
+  # other outputs
   output$plot <- renderPlot({
     v <- config$visualizations[[input$vis]]
     switch(v$type,

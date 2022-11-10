@@ -234,12 +234,10 @@ visualizations:
     type: tree
     description: 'tree: Poems by type'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
-                   SUM(IF(pt.p_id IS NULL, 0, 1)) AS y
+    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
             FROM
               themes t
-              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
-              LEFT JOIN themes tp ON tp.t_id = t.par_id
+              JOIN poem_theme pt ON pt.t_id = t.t_id
             WHERE t.theme_id LIKE "@dataset_%"
                   AND t.theme_id NOT LIKE "erab_orig%"
                   AND t.theme_id NOT LIKE "kt_%"
@@ -254,15 +252,13 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for collector'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
-                   SUM(IF(c.name = "@t_collector", 1, 0)) AS y
+    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
             FROM
               themes t
-              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
-              LEFT JOIN p_col pc ON pt.p_id = pc.p_id
-              LEFT JOIN collectors c ON pc.col_id = c.col_id
-              LEFT JOIN themes tp ON tp.t_id = t.par_id
-            WHERE pc.col_id IS NULL OR c.name = "@t_collector"
+              JOIN poem_theme pt ON pt.t_id = t.t_id
+              JOIN p_col pc ON pt.p_id = pc.p_id
+              JOIN collectors c ON pc.col_id = c.col_id
+            WHERE c.name = "@t_collector"
                   AND (@t_col_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
                   AND t.theme_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
@@ -278,15 +274,13 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for parish'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
-                   SUM(IF(l.name = "@t_parish_name", 1, 0)) AS y
+    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
             FROM
               themes t
-              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
-              LEFT JOIN p_loc ON pt.p_id = p_loc.p_id
-              LEFT JOIN locations l ON p_loc.loc_id = l.loc_id
-              LEFT JOIN themes tp ON tp.t_id = t.par_id
-            WHERE p_loc.loc_id IS NULL OR l.name = "@t_parish_name"
+              JOIN poem_theme pt ON pt.t_id = t.t_id
+              JOIN p_loc ON pt.p_id = p_loc.p_id
+              JOIN locations l ON p_loc.loc_id = l.loc_id
+            WHERE l.name = "@t_parish_name"
                   AND (@t_parish_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
                   AND t.theme_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
@@ -302,15 +296,13 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for SKVR volume'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name AS label, tp.theme_id AS parent,
-                   SUM(IF(rm.value = "@t_volume", 1, 0)) AS y
+    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
             FROM
               themes t
-              LEFT JOIN poem_theme pt ON pt.t_id = t.t_id
-              LEFT JOIN poems p ON pt.p_id = p.p_id
-              LEFT JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
-              LEFT JOIN themes tp ON tp.t_id = t.par_id
-            WHERE p.p_id IS NULL OR (rm.value = "@t_volume" AND p.nro LIKE "skvr%")
+              JOIN poem_theme pt ON pt.t_id = t.t_id
+              JOIN poems p ON pt.p_id = p.p_id
+              JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
+            WHERE rm.value = "@t_volume" AND p.collection = "skvr"
             GROUP BY t.t_id;'
     params:
       - name: t_volume
@@ -321,15 +313,13 @@ visualizations:
     type: tree
     description: 'tree: Co-occurring types'
     source: sql
-    query: 'SELECT t1.theme_id AS x, t1.name AS label, t1p.theme_id AS parent,
-                   SUM(IF(t2.theme_id = "@t_theme_id", 1, 0)) AS y
+    query: 'SELECT t1.theme_id AS x, t1.name, COUNT(*) AS y
             FROM
               themes t1
-              LEFT JOIN poem_theme pt1 ON pt1.t_id = t1.t_id
-              LEFT JOIN poem_theme pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
-              LEFT JOIN themes t2 ON pt2.t_id = t2.t_id
-              LEFT JOIN themes t1p ON t1.par_id = t1p.t_id
-            WHERE pt1.p_id IS NULL OR t2.theme_id = "@t_theme_id"
+              JOIN poem_theme pt1 ON pt1.t_id = t1.t_id
+              JOIN poem_theme pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
+              JOIN themes t2 ON pt2.t_id = t2.t_id
+            WHERE t2.theme_id = "@t_theme_id"
                   AND (@t_theme_incl_erab_orig OR t1.theme_id NOT LIKE "erab_orig%")
             GROUP BY t1.t_id;'
     params:
@@ -344,31 +334,20 @@ visualizations:
     type: tree
     description: 'tree: Verse cluster type distribution'
     source: sql
-    query: 'SELECT x, label, parent, MAX(y) AS y
+    query: 'SELECT
+               t.theme_id AS x, t.name, COUNT(*) AS y
             FROM
-             (SELECT
-                t.t_id, t.theme_id AS x, t.name AS label, tp.theme_id AS parent, COUNT(*) AS y
-              FROM
-                poems p
-                JOIN verse_poem vp ON vp.p_id = p.p_id
-                JOIN v_clust vc ON vc.v_id = vp.v_id
-                                   AND vc.clustering_id = @t_theme_clustering
-                JOIN v_clust vc2 ON vc2.clust_id = vc.clust_id
-                                    AND vc2.clustering_id = @t_theme_clustering
-                JOIN verse_poem vp2 ON vc2.v_id = vp2.v_id
-                JOIN poem_theme pt2 ON vp2.p_id = pt2.p_id
-                JOIN themes t ON pt2.t_id = t.t_id
-                JOIN themes tp ON t.par_id = tp.t_id
-              WHERE p.nro = "@t_theme_nro" AND vp.pos = @t_theme_pos
-              GROUP BY t.t_id
-              UNION
-              SELECT
-               t.t_id, t.theme_id AS x, t.name AS label, tp.theme_id AS parent, 0 AS y
-              FROM
-               themes t
-               LEFT JOIN themes tp ON t.par_id = tp.t_id) tbl
-            GROUP BY
-              x, label, parent;'
+              poems p
+              JOIN verse_poem vp ON vp.p_id = p.p_id
+              JOIN v_clust vc ON vc.v_id = vp.v_id
+                                 AND vc.clustering_id = @t_theme_clustering
+              JOIN v_clust vc2 ON vc2.clust_id = vc.clust_id
+                                  AND vc2.clustering_id = vc.clustering_id
+              JOIN verse_poem vp2 ON vc2.v_id = vp2.v_id
+              JOIN poem_theme pt2 ON vp2.p_id = pt2.p_id
+              JOIN themes t ON pt2.t_id = t.t_id
+            WHERE p.nro = "@t_theme_nro" AND vp.pos = @t_theme_pos
+            GROUP BY t.t_id;'
     params:
       - name: t_theme_clustering
         description: 'Clustering'
