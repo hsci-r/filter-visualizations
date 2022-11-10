@@ -6,6 +6,25 @@ library(sf)
 library(stringi)
 library(yaml)
 
+tree.colors <- rbind(
+  c('#4169E1', '#5D7FE5', '#7A96EA', '#96ACEE'),
+  c('#FFA500', '#FFB226', '#FFC04C', '#FFCD72'),
+  c('#6CA6CD', '#82B3D4', '#98C0DC', '#AECEE3'),
+  c('#22BB44', '#43C560', '#64CF7C', '#85D998'),
+  c('#DDA0DD', '#E2AEE2', '#E7BCE7', '#ECCAEC'),
+  c('#DD0000', '#E22626', '#E74C4C', '#EC7272'),
+  c('#8B4C39', '#9C6656', '#AD8174', '#BF9C92'),
+  c('#FA8072', '#FA9387', '#FBA69C', '#FCB9B1'),
+  c('#D02090', '#D741A0', '#DE62B1', '#E584C1'),
+  c('#556B2F', '#6E814E', '#88976D', '#A1AD8C'),
+  c('#8B8989', '#9C9A9A', '#ADACAC', '#BFBEBE')
+)
+tree.fontcolors <- c(
+  'white', 'black', 'white', 'white',
+  'black', 'white', 'white', 'black',
+  'white', 'white', 'white'
+)
+
 connect_to_db <- function() {
   con <- dbConnect(MariaDB(),
                    host=Sys.getenv('DB_HOST'),
@@ -161,12 +180,41 @@ server <- function(input, output, session) {
                 suffix=c('', '.2'), na_matches='never') %>%
       left_join(df2, by=c('theme_id.2' = 'parent'),
                 suffix=c('', '.3'), na_matches='never') %>%
+      mutate(category = case_when(
+        grepl('skvr_t01.*', theme_id) ~ 1,
+        grepl('skvr_t02.*', theme_id) ~ 2,
+        grepl('skvr_t03.*', theme_id) ~ 3,
+        grepl('skvr_t04.*', theme_id) ~ 4,
+        grepl('skvr_t05.*', theme_id) ~ 5,
+        grepl('skvr_t06.*', theme_id) ~ 6,
+        grepl('skvr_t07.*', theme_id) ~ 7,
+        grepl('skvr_t08.*', theme_id) ~ 8,
+        grepl('erab_001.*', theme_id) ~ 1,
+        grepl('erab_002.*', theme_id) ~ 2,
+        grepl('erab_003.*', theme_id) ~ 3,
+        grepl('erab_004.*', theme_id) ~ 4,
+        grepl('erab_005.*', theme_id) ~ 5,
+        grepl('erab_006.*', theme_id) ~ 6,
+        grepl('erab_007.*', theme_id) ~ 7,
+        grepl('erab_008.*', theme_id) ~ 10,
+        grepl('erab_011.*', theme_id) ~ 8,
+        grepl('erab_013.*', theme_id) ~ 9,
+        TRUE ~ 11
+      ),
+      level = 1 + (!is.na(theme_id.1))
+              + (!is.na(theme_id.2)) + (!is.na(theme_id.3))) %>%
       group_by(theme_id, name, parent) %>%
       summarize(y = sum(y, na.rm=T) + sum(y.1, na.rm=T)
-                + sum(y.2, na.rm=T) + sum(y.3, na.rm=T)) %>%
+                + sum(y.2, na.rm=T) + sum(y.3, na.rm=T),
+                level=max(level), category=min(category)) %>%
+      mutate(color = tree.colors[cbind(category, level)],
+             fontcolor = tree.fontcolors[category]) %>%
       filter(y > 0)
     plot_ly(df3, ids=~theme_id, labels=~name, parents=~parent, values=~y,
-            type=input$tree_type, branchvalues='total')
+            type=input$tree_type, branchvalues='total',
+            marker=list(colors=~color),
+            textfont=list(color=~fontcolor),
+            hoverlabel=list(font=list(color=~fontcolor)))
   })
 
   # other outputs
