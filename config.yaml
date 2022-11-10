@@ -452,6 +452,13 @@ visualization_types:
       - name: map_var
         description: Variable name
         widget: textInput
+      - name: map_region
+        description: Region
+        widget: selectInput
+        choices:
+          'North and South': 'kaA su ru kaV ka in ve suI ly li x viP viE'
+          'North (Finland, Karelia, Ingria)': 'kaA su ru kaV ka in ve suI ly'
+          'South (Estonia)': 'viP viE li'
   timeline:
     params:
       - name: tl_min

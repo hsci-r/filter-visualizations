@@ -52,7 +52,7 @@ query_octavo <- function(endpoint, query, level, fields, grouping.var, limit=20,
 
 read_areas <- function() {
   con <- connect_to_db()
-  q <- 'select name as parish_name, ST_AsBinary(geometry) as geometry from polygons;'
+  q <- 'select name as parish_name, lang, ST_AsBinary(geometry) as geometry from polygons;'
   df <- st_read(con, query=q, geometry_column='geometry')
   st_crs(df) <- 'urn:ogc:def:crs:EPSG::3857'
   dbDisconnect(con)
@@ -124,8 +124,11 @@ server <- function(input, output, session) {
   # map
   tmap <- reactive({
     breaks <- sapply(unlist(stri_split_fixed(input$map_breaks, ',')), as.numeric)
+    langs <- unlist(stri_split_fixed(input$map_region, ' '))
     tm_shape(
-      areas %>% left_join(df(), by=c('parish_name' = 'x'))
+      areas %>%
+        filter(lang %in% langs) %>%
+        left_join(df(), by=c('parish_name' = 'x'))
     ) + tm_polygons(col="y", id="parish_name",
                     palette=input$map_palette, style=input$map_style,
                     n = input$map_classes, breaks=breaks,
