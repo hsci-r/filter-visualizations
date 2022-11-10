@@ -64,14 +64,14 @@ read_themes <- function() {
                   'from themes t left join themes tp on t.par_id = tp.t_id;'))
 }
 
-make_query <- function(input, visualization) {
+insert_params <- function(string, input, params) {
   ifelse(
-    is.null(visualization$params),
-    visualization$query,
+    is.null(params),
+    string,
     stri_replace_all_regex(
-      visualization$query,
-      paste0('@', sapply(visualization$params, function(x) x$name)),
-      sapply(visualization$params, function(x) input[[x$name]]),
+      string,
+      paste0('@', sapply(params, function(x) x$name)),
+      sapply(params, function(x) input[[x$name]]),
       vectorize_all=F
     )
   )
@@ -108,14 +108,15 @@ server <- function(input, output, session) {
   df <- reactive({
     req(input$vis)
     v <- config$visualizations[[input$vis]]
-    q <- make_query(input, v)
+    q <- insert_params(v$query, input, v$params)
+    if (v$source == "octavo") {
+      lvl <- insert_params(v$level, input, v$params)
+    }
     switch(v$source,
       'csv' = read.csv(text = q),
       'sql' = query_db(q),
-      # FIXME match between the widget "octavo_level" and the Octavo
-      # parameter "level" is hardcoded here!
       'octavo' = query_octavo(config$global$octavo_endpoint, q,
-                              input$octavo_level, v$fields, v$group_by, limit=-1)
+                              lvl, v$fields, v$group_by, limit=-1)
     )
   }) %>%
   bindEvent(input$refresh, ignoreNULL=F)
@@ -135,7 +136,17 @@ server <- function(input, output, session) {
 
   # type tree
   output$tree <- renderPlotly({
+    v <- config$visualizations[[input$vis]]
     df <- df()
+    if (v$source == "octavo") {
+      # Remove non-leaf types.
+      # Frequencies of upper levels need to be to be recomputed because
+      # Octavo counts a higher-level category only once, no matter
+      # how many of its subcategories occur in an entry.
+      df <- df %>%
+        anti_join(themes %>% filter(!is.na(parent)) %>%
+                  select(parent) %>% rename(x = parent) %>% unique())
+    }
     # join with the table of all types (to have the info about the hierarchy)
     df2 <- themes %>%
       left_join(df, by=c('theme_id' = 'x'), suffix=c('', '.y'))
@@ -149,7 +160,7 @@ server <- function(input, output, session) {
                 suffix=c('', '.3'), na_matches='never') %>%
       group_by(theme_id, name, parent) %>%
       summarize(y = sum(y, na.rm=T) + sum(y.1, na.rm=T)
-                    + sum(y.2, na.rm=T) + sum(y.3, na.rm=T)) %>%
+                + sum(y.2, na.rm=T) + sum(y.3, na.rm=T)) %>%
       filter(y > 0)
     plot_ly(df3, ids=~theme_id, labels=~name, parents=~parent, values=~y,
             type=input$tree_type, branchvalues='total')

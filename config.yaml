@@ -193,6 +193,7 @@ visualizations:
     description: 'map: Custom Octavo query'
     source: octavo
     query: '@octavo_query'
+    level: '@octavo_level'
     fields:
       - place_name
     group_by: place_name
@@ -362,6 +363,37 @@ visualizations:
       - name: t_theme_incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
+  tree_octavo:
+    type: tree
+    description: 'tree: Custom Octavo query'
+    source: octavo
+    query: '@t_octavo_query'
+    fields:
+      - theme_id
+    level: '@t_octavo_level'
+    group_by: theme_id
+    params:
+      - name: t_octavo_query
+        description: 'Query'
+        widget: textAreaInput
+        rows: 5
+      - name: t_octavo_level
+        description: 'Level'
+        widget: selectInput
+        choices: [ VERSE, POEM ]
+  tree_custom_sql:
+    type: tree
+    description: 'tree: Custom SQL query'
+    source: sql
+    helptext: 'The resulting table should contain the following columns:
+               `x` for original type ID (`themes.theme_id` in the DB) and `y`
+               for the value to display.'
+    query: '@t_query'
+    params:
+      - name: t_query
+        description: 'Query'
+        widget: textAreaInput
+        rows: 5
   plot_top_collectors:
     type: barplot
     description: 'plot: Top collectors'
