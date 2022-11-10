@@ -293,6 +293,35 @@ visualizations:
       - name: t_parish_incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
+  tree_time_int:
+    type: tree
+    description: 'tree: Number of poems in a time interval'
+    source: sql
+    query: 'SELECT t.theme_id AS x, t.name, count(*) AS y
+            FROM p_year
+              JOIN poems p ON p_year.p_id = p.p_id
+              JOIN poem_theme pt ON p_year.p_id = pt.p_id
+              JOIN themes t ON pt.t_id = t.t_id
+            WHERE p_year.year BETWEEN @t_year_min AND @t_year_max
+                  AND p.collection = "@t_time_int_collection"
+                  AND (@t_time_int_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+            GROUP BY t.t_id;'
+    params:
+      - name: t_year_min
+        description: From year
+        widget: numericInput
+        default: 1800
+      - name: t_year_max
+        description: To year
+        widget: numericInput
+        default: 1930
+      - name: t_time_int_collection
+        description: Collection
+        widget: selectInput
+        choices: [ skvr, erab]
+      - name: t_time_int_incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
   tree_types_volume:
     type: tree
     description: 'tree: Poems by type for SKVR volume'
