@@ -151,8 +151,9 @@ server <- function(input, output, session) {
     ) + tm_polygons(col="y", id="parish_name",
                     palette=input$map_palette, style=input$map_style,
                     n = input$map_classes, breaks=breaks,
-                    title = input$map_var
-    ) + tm_layout(title = input$map_title)
+                    title = input$map_var, textNA="\u2014"
+    ) + tm_layout(title = input$map_title,
+                  legend.format = list(text.separator='\u2013'))
   })
   output$tmap <- renderTmap({ tmap() })
 
