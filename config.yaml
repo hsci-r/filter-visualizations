@@ -173,6 +173,22 @@ visualizations:
       - name: pos
         description: 'Verse position'
         widget: numericInput
+  map_poem_cluster:
+    type: map
+    description: 'map: Poem cluster'
+    source: sql
+    query: 'SELECT l.name AS x, count(*) AS y
+            FROM poems p
+              JOIN p_clust pc1 ON p.p_id = pc1.p_id
+              JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
+              JOIN p_loc ON p_loc.p_id = pc2.p_id
+              JOIN locations l ON l.loc_id = p_loc.loc_id
+            WHERE p.nro = "@pc_nro"
+            GROUP BY l.loc_id;'
+    params:
+      - name: pc_nro
+        description: 'Poem ID'
+        widget: textInput
   map_sim_poems:
     type: map
     description: 'map: Similar poems'
@@ -390,6 +406,26 @@ visualizations:
         description: 'Verse position'
         widget: numericInput
       - name: t_theme_incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
+  tree_poem_cluster:
+    type: tree
+    description: 'tree: Poem cluster type distribution'
+    source: sql
+    query: 'SELECT t.theme_id AS x, t.name, count(*) AS y
+            FROM poems p
+              JOIN p_clust pc1 ON p.p_id = pc1.p_id
+              JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
+              JOIN poem_theme pt ON pt.p_id = pc2.p_id
+              JOIN themes t ON t.t_id = pt.t_id
+            WHERE p.nro = "@t_pc_nro"
+                  AND (@t_pc_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+            GROUP BY t.t_id;'
+    params:
+      - name: t_pc_nro
+        description: 'Poem ID'
+        widget: textInput
+      - name: t_pc_incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
   tree_octavo:
