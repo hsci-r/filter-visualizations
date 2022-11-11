@@ -42,16 +42,16 @@ make_input <- function(x) {
     'numericInput' = numericInput(inputId = x$name, label = x$description,
                                   value = getvalue(x)),
     'radioButtons' = radioButtons(inputId = x$name, label = x$description,
-                                  choices = x$choices, selected = x$default),
+                                  choices = x$choices, selected = getvalue(x)),
     'selectInput' = selectInput(inputId = x$name, label = x$description,
-                                choices=x$choices, selected=x$default),
+                                choices=x$choices, selected=getvalue(x)),
     'selectizeInput' = selectizeInput(inputId = x$name, label = x$description,
                                       choices=c(x$value, x[['choices']]),
-                                      selected=x$value),
+                                      selected=getvalue(x)),
     'textInput' = textInput(inputId = x$name, label = x$description,
-                            value = x$value),
+                            value = getvalue(x)),
     'textAreaInput' = textAreaInput(inputId = x$name, label = x$description,
-                                    rows=x$rows, value=x$value)
+                                    rows=x$rows, value=getvalue(x))
   )
   w <- disableIf(!is.null(x$value), w)
   if (!is.null(x$condition)) {
