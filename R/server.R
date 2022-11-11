@@ -79,8 +79,58 @@ read_areas <- function() {
 }
 
 read_themes <- function() {
-  query_db(paste0('select t.theme_id, t.name, tp.theme_id as parent ',
-                  'from themes t left join themes tp on t.par_id = tp.t_id;'))
+  themes <- query_db(paste(
+    'SELECT ',
+    '  t1.theme_id AS theme_id_1, t1.name AS name_1, t2.theme_id as parent_1, ',
+    '  t2.theme_id AS theme_id_2, t2.name AS name_2, t3.theme_id as parent_2, ',
+    '  t3.theme_id AS theme_id_3, t3.name AS name_3, t4.theme_id as parent_3, ',
+    '  t4.theme_id AS theme_id_4, t4.name AS name_4 ',
+    'FROM ',
+    '  themes t1',
+    '  LEFT JOIN themes t2 ON t1.par_id = t2.t_id',
+    '  LEFT JOIN themes t3 ON t2.par_id = t3.t_id',
+    '  LEFT JOIN themes t4 ON t3.par_id = t4.t_id',
+    'WHERE t1.theme_id NOT LIKE "kt_%"',
+    ';'
+  ))
+  themes <- themes %>%
+    anti_join(themes %>%
+      filter(!is.na(parent_1)) %>%
+      select(parent_1) %>%
+      rename(theme_id_1 = parent_1) %>%
+      unique()) %>%
+    mutate(
+      parent_4 = NA_character_,
+      tlc = case_when(
+        !is.na(theme_id_4) ~ theme_id_4,
+        !is.na(theme_id_3) ~ theme_id_3,
+        !is.na(theme_id_2) ~ theme_id_2,
+        grepl('erab_orig', theme_id_1) | nchar(theme_id_1) > 8 ~ NA_character_,
+        !is.na(theme_id_1) ~ theme_id_1
+      ),
+      cat = case_when(
+        tlc == 'skvr_t01' ~  1,
+        tlc == 'skvr_t02' ~  2,
+        tlc == 'skvr_t03' ~  3,
+        tlc == 'skvr_t04' ~  4,
+        tlc == 'skvr_t05' ~  5,
+        tlc == 'skvr_t06' ~  6,
+        tlc == 'skvr_t07' ~  7,
+        tlc == 'skvr_t08' ~  8,
+        tlc == 'erab_001' ~  1,
+        tlc == 'erab_002' ~  2,
+        tlc == 'erab_003' ~  3,
+        tlc == 'erab_004' ~  4,
+        tlc == 'erab_005' ~  5,
+        tlc == 'erab_006' ~  6,
+        tlc == 'erab_007' ~  7,
+        tlc == 'erab_008' ~  10,
+        tlc == 'erab_011' ~  8,
+        tlc == 'erab_013' ~  9,
+        TRUE              ~  11
+      ),
+    )
+  themes
 }
 
 insert_params <- function(string, input, params) {
@@ -161,56 +211,36 @@ server <- function(input, output, session) {
   output$tree <- renderPlotly({
     v <- config$visualizations[[input$vis]]
     df <- df()
-    if (v$source == "octavo") {
-      # Remove non-leaf types.
-      # Frequencies of upper levels need to be to be recomputed because
-      # Octavo counts a higher-level category only once, no matter
-      # how many of its subcategories occur in an entry.
-      df <- df %>%
-        anti_join(themes %>% filter(!is.na(parent)) %>%
-                  select(parent) %>% rename(x = parent) %>% unique())
-    }
-    # join with the table of all types (to have the info about the hierarchy)
-    df2 <- themes %>%
-      left_join(df, by=c('theme_id' = 'x'), suffix=c('', '.y'))
-    # compute totals for categories higher in the hierarchy
+    # join with the type hierarchy
+    df2 <- df %>%
+      inner_join(themes, by = c('x' = 'theme_id_1'), suffix=c('.x', ''))
+    # compute sums for the higher hierarchy levels
     df3 <- df2 %>%
-      left_join(df2, by=c('theme_id' = 'parent'),
-                suffix=c('', '.1'), na_matches='never') %>%
-      left_join(df2, by=c('theme_id.1' = 'parent'),
-                suffix=c('', '.2'), na_matches='never') %>%
-      left_join(df2, by=c('theme_id.2' = 'parent'),
-                suffix=c('', '.3'), na_matches='never') %>%
-      mutate(category = case_when(
-        grepl('skvr_t01.*', theme_id) ~ 1,
-        grepl('skvr_t02.*', theme_id) ~ 2,
-        grepl('skvr_t03.*', theme_id) ~ 3,
-        grepl('skvr_t04.*', theme_id) ~ 4,
-        grepl('skvr_t05.*', theme_id) ~ 5,
-        grepl('skvr_t06.*', theme_id) ~ 6,
-        grepl('skvr_t07.*', theme_id) ~ 7,
-        grepl('skvr_t08.*', theme_id) ~ 8,
-        grepl('erab_001.*', theme_id) ~ 1,
-        grepl('erab_002.*', theme_id) ~ 2,
-        grepl('erab_003.*', theme_id) ~ 3,
-        grepl('erab_004.*', theme_id) ~ 4,
-        grepl('erab_005.*', theme_id) ~ 5,
-        grepl('erab_006.*', theme_id) ~ 6,
-        grepl('erab_007.*', theme_id) ~ 7,
-        grepl('erab_008.*', theme_id) ~ 10,
-        grepl('erab_011.*', theme_id) ~ 8,
-        grepl('erab_013.*', theme_id) ~ 9,
-        TRUE ~ 11
-      ),
-      level = 1 + (!is.na(theme_id.1))
-              + (!is.na(theme_id.2)) + (!is.na(theme_id.3))) %>%
-      group_by(theme_id, name, parent) %>%
-      summarize(y = sum(y, na.rm=T) + sum(y.1, na.rm=T)
-                + sum(y.2, na.rm=T) + sum(y.3, na.rm=T),
-                level=max(level), category=min(category)) %>%
-      mutate(color = tree.colors[cbind(category, level)],
-             fontcolor = tree.fontcolors[category]) %>%
-      filter(y > 0)
+      select(theme_id = x, name = name_1, parent = parent_1,
+             y = y, cat = cat) %>%
+      mutate(level = 1) %>%
+      union(df2 %>%
+        filter(!is.na(theme_id_2)) %>%
+        group_by(theme_id = theme_id_2) %>%
+        summarize(name = first(name_2), parent = first(parent_2),
+                  y = sum(y), cat = first(cat), level = 2)) %>%
+      union(df2 %>%
+        filter(!is.na(theme_id_3)) %>%
+        group_by(theme_id = theme_id_3) %>%
+        summarize(name = first(name_3), parent = first(parent_3),
+                  y = sum(y), cat = first(cat), level = 3)) %>%
+      union(df2 %>%
+        filter(!is.na(theme_id_4)) %>%
+        group_by(theme_id = theme_id_4) %>%
+        summarize(name = first(name_4), parent = first(parent_4),
+                  y = sum(y), cat = first(cat), level = 4)) %>%
+      group_by(theme_id) %>%
+      summarize(name = first(name), parent = first(parent),
+                y = sum(y), cat = first(cat), level = max(level)) %>%
+      arrange(desc(level), theme_id) %>%
+      mutate(color = tree.colors[cbind(cat, level)],
+             fontcolor = tree.fontcolors[cat])
+    # plot
     plot_ly(df3, ids=~theme_id, labels=~name, parents=~parent, values=~y,
             type=input$tree_type, branchvalues='total',
             marker=list(colors=~color),
