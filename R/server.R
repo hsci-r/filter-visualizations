@@ -9,8 +9,8 @@ library(yaml)
 tree.colors <- rbind(
   c('#4169E1', '#5D7FE5', '#7A96EA', '#96ACEE'),
   c('#FFA500', '#FFB226', '#FFC04C', '#FFCD72'),
-  c('#6CA6CD', '#82B3D4', '#98C0DC', '#AECEE3'),
-  c('#22BB44', '#43C560', '#64CF7C', '#85D998'),
+  c('#5D478B', '#75629C', '#8D7EAD', '#A599BF'),
+  c('#008B45', '#269C60', '#4CAD7C', '#72BF98'),
   c('#DDA0DD', '#E2AEE2', '#E7BCE7', '#ECCAEC'),
   c('#DD0000', '#E22626', '#E74C4C', '#EC7272'),
   c('#8B4C39', '#9C6656', '#AD8174', '#BF9C92'),
