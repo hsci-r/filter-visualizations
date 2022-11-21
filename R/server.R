@@ -4,6 +4,7 @@ library(RCurl)
 library(RMariaDB)
 library(sf)
 library(stringi)
+library(tidyr)
 library(yaml)
 
 tree.colors <- rbind(
@@ -44,6 +45,20 @@ query_db <- function(q) {
   dbClearResult(res)
   dbDisconnect(con)
   data
+}
+
+get_csv_from_url <- function(url, grouping.var) {
+  df <- read.csv(url) %>%
+    rename(x = grouping.var) %>%
+    separate_rows(x, sep='; ') %>%
+    group_by(x) %>%
+    summarize(y = n()) %>%
+    filter(x != "")
+  # workaround for place names: "County — Parish" -> "Parish"
+  if (grouping.var == 'location') {
+    df$x <- stri_replace_all_regex(df$x, '.* — ', '')
+  }
+  df
 }
 
 query_octavo <- function(endpoint, query, level, fields, grouping.var, limit=20, offset=0) {
@@ -184,6 +199,7 @@ server <- function(input, output, session) {
     switch(v$source,
       'csv' = read.csv(text = q),
       'sql' = query_db(q),
+      'url' = get_csv_from_url(q, v$group_by),
       'octavo' = query_octavo(config$global$octavo_endpoint, q,
                               lvl, v$fields, v$group_by, limit=-1)
     )

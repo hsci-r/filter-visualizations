@@ -173,6 +173,26 @@ visualizations:
       - name: pos
         description: 'Verse position'
         widget: numericInput
+  map_passage:
+    type: map
+    description: 'map: Passage'
+    source: url
+    query: 'http://runoregi.rahtiapp.fi/passage?nro=@nro&start=@start&end=@end&clustering=@clustering&format=csv'
+    group_by: location
+    params:
+      - name: clustering
+        description: 'Clustering'
+        widget: selectizeInput
+        choices_query: clusterings
+      - name: nro
+        description: 'Poem ID'
+        widget: textInput
+      - name: start
+        description: 'Start position'
+        widget: numericInput
+      - name: end
+        description: 'End position'
+        widget: numericInput
   map_poem_cluster:
     type: map
     description: 'map: Poem cluster'
