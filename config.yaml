@@ -177,7 +177,7 @@ visualizations:
     type: map
     description: 'map: Passage'
     source: url
-    query: 'http://runoregi.rahtiapp.fi/passage?nro=@nro&start=@start&end=@end&clustering=@clustering&format=csv'
+    query: 'http://runoregi.rahtiapp.fi/passage?nro=@nro&start=@start&end=@end&clustering=@clustering&dist=@dist&hitfact=@hitfact&format=csv'
     group_by: location
     params:
       - name: clustering
@@ -193,6 +193,14 @@ visualizations:
       - name: end
         description: 'End position'
         widget: numericInput
+      - name: dist
+        description: 'Maximum distance'
+        widget: numericInput
+      - name: hitfact
+        description: 'Hit factor'
+        widget: numericInput
+        default: 0.5
+        step: 0.1
   map_poem_cluster:
     type: map
     description: 'map: Poem cluster'
