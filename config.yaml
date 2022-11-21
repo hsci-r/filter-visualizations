@@ -94,14 +94,14 @@ visualizations:
             FROM p_year
               JOIN p_loc ON p_year.p_id = p_loc.p_id
               JOIN locations l ON p_loc.loc_id = l.loc_id
-            WHERE p_year.year BETWEEN @map_year_min AND @map_year_max
+            WHERE p_year.year BETWEEN @min AND @max
             GROUP BY l.loc_id;'
     params:
-      - name: map_year_min
+      - name: min
         description: From year
         widget: numericInput
         default: 1800
-      - name: map_year_max
+      - name: max
         description: To year
         widget: numericInput
         default: 1930
@@ -136,13 +136,13 @@ visualizations:
               JOIN p_loc ON vp.p_id = p_loc.p_id
               JOIN locations l ON p_loc.loc_id = l.loc_id
               JOIN location_stats ls ON l.loc_id = ls.loc_id
-            WHERE w.text @rf_operator "@rf_word"
+            WHERE w.text @operator "@word"
             GROUP BY l.loc_id;'
     params:
-      - name: rf_word
+      - name: word
         description: 'Word'
         widget: textInput
-      - name: rf_operator
+      - name: operator
         description: 'Operator'
         widget: selectInput
         choices: ['=', 'LIKE', 'REGEXP']
@@ -183,10 +183,10 @@ visualizations:
               JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
               JOIN p_loc ON p_loc.p_id = pc2.p_id
               JOIN locations l ON l.loc_id = p_loc.loc_id
-            WHERE p.nro = "@pc_nro"
+            WHERE p.nro = "@nro"
             GROUP BY l.loc_id;'
     params:
-      - name: pc_nro
+      - name: nro
         description: 'Poem ID'
         widget: textInput
   map_sim_poems:
@@ -198,10 +198,10 @@ visualizations:
               JOIN poems p1 ON s.p1_id = p1.p_id
               JOIN p_loc ON p_loc.p_id = s.p2_id
               JOIN locations l ON l.loc_id = p_loc.loc_id
-            WHERE p1.nro = "@sp_nro"
+            WHERE p1.nro = "@nro"
             GROUP BY l.loc_id;'
     params:
-      - name: sp_nro
+      - name: nro
         description: 'Poem ID'
         widget: textInput
   map_octavo:
@@ -255,13 +255,13 @@ visualizations:
             FROM
               themes t
               JOIN poem_theme pt ON pt.t_id = t.t_id
-            WHERE t.theme_id LIKE "@dataset_%"
+            WHERE t.theme_id LIKE "@collection_%"
                   AND t.theme_id NOT LIKE "erab_orig%"
                   AND t.theme_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
-      - name: dataset
-        description: 'Dataset'
+      - name: collection
+        description: 'Collection'
         widget: selectInput
         choices: [ skvr, erab ]
         default: skvr_
@@ -275,16 +275,16 @@ visualizations:
               JOIN poem_theme pt ON pt.t_id = t.t_id
               JOIN p_col pc ON pt.p_id = pc.p_id
               JOIN collectors c ON pc.col_id = c.col_id
-            WHERE c.name = "@t_collector"
-                  AND (@t_col_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+            WHERE c.name = "@collector"
+                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
                   AND t.theme_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
-      - name: t_collector
+      - name: collector
         description: 'Collector name'
         widget: selectizeInput
         choices_query: collectors
-      - name: t_col_incl_erab_orig
+      - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
   tree_types_parish:
@@ -297,16 +297,16 @@ visualizations:
               JOIN poem_theme pt ON pt.t_id = t.t_id
               JOIN p_loc ON pt.p_id = p_loc.p_id
               JOIN locations l ON p_loc.loc_id = l.loc_id
-            WHERE l.name = "@t_parish_name"
-                  AND (@t_parish_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+            WHERE l.name = "@parish_name"
+                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
                   AND t.theme_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
-      - name: t_parish_name
+      - name: parish_name
         description: 'Parish name'
         widget: selectizeInput
         choices_query: places
-      - name: t_parish_incl_erab_orig
+      - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
   tree_time_int:
@@ -318,24 +318,24 @@ visualizations:
               JOIN poems p ON p_year.p_id = p.p_id
               JOIN poem_theme pt ON p_year.p_id = pt.p_id
               JOIN themes t ON pt.t_id = t.t_id
-            WHERE p_year.year BETWEEN @t_year_min AND @t_year_max
-                  AND p.collection = "@t_time_int_collection"
-                  AND (@t_time_int_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+            WHERE p_year.year BETWEEN @min AND @max
+                  AND p.collection = "@collection"
+                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
             GROUP BY t.t_id;'
     params:
-      - name: t_year_min
+      - name: min
         description: From year
         widget: numericInput
         default: 1800
-      - name: t_year_max
+      - name: max
         description: To year
         widget: numericInput
         default: 1930
-      - name: t_time_int_collection
+      - name: collection
         description: Collection
         widget: selectInput
-        choices: [ skvr, erab]
-      - name: t_time_int_incl_erab_orig
+        choices: [ skvr, erab ]
+      - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
   tree_types_volume:
@@ -348,10 +348,10 @@ visualizations:
               JOIN poem_theme pt ON pt.t_id = t.t_id
               JOIN poems p ON pt.p_id = p.p_id
               JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
-            WHERE rm.value = "@t_volume" AND p.collection = "skvr"
+            WHERE rm.value = "@volume" AND p.collection = "skvr"
             GROUP BY t.t_id;'
     params:
-      - name: t_volume
+      - name: volume
         description: 'Volume'
         widget: selectizeInput
         choices_query: skvr_volumes
@@ -365,15 +365,15 @@ visualizations:
               JOIN poem_theme pt1 ON pt1.t_id = t1.t_id
               JOIN poem_theme pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
               JOIN themes t2 ON pt2.t_id = t2.t_id
-            WHERE t2.theme_id = "@t_theme_id"
-                  AND (@t_theme_incl_erab_orig OR t1.theme_id NOT LIKE "erab_orig%")
+            WHERE t2.theme_id = "@theme_id"
+                  AND (@incl_erab_orig OR t1.theme_id NOT LIKE "erab_orig%")
             GROUP BY t1.t_id;'
     params:
-      - name: t_theme_id
+      - name: theme_id
         description: 'Type'
         widget: selectizeInput
         choices_query: themes
-      - name: t_theme_incl_erab_orig
+      - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
   tree_types_cluster:
@@ -386,26 +386,27 @@ visualizations:
               poems p
               JOIN verse_poem vp ON vp.p_id = p.p_id
               JOIN v_clust vc ON vc.v_id = vp.v_id
-                                 AND vc.clustering_id = @t_theme_clustering
+                                 AND vc.clustering_id = @clustering
               JOIN v_clust vc2 ON vc2.clust_id = vc.clust_id
                                   AND vc2.clustering_id = vc.clustering_id
               JOIN verse_poem vp2 ON vc2.v_id = vp2.v_id
               JOIN poem_theme pt2 ON vp2.p_id = pt2.p_id
               JOIN themes t ON pt2.t_id = t.t_id
-            WHERE p.nro = "@t_theme_nro" AND vp.pos = @t_theme_pos
+            WHERE p.nro = "@nro" AND vp.pos = @pos
+                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
             GROUP BY t.t_id;'
     params:
-      - name: t_theme_clustering
+      - name: clustering
         description: 'Clustering'
         widget: selectizeInput
         choices_query: clusterings
-      - name: t_theme_nro
+      - name: nro
         description: 'Poem ID'
         widget: textInput
-      - name: t_theme_pos
+      - name: pos
         description: 'Verse position'
         widget: numericInput
-      - name: t_theme_incl_erab_orig
+      - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
   tree_poem_cluster:
@@ -418,31 +419,31 @@ visualizations:
               JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
               JOIN poem_theme pt ON pt.p_id = pc2.p_id
               JOIN themes t ON t.t_id = pt.t_id
-            WHERE p.nro = "@t_pc_nro"
-                  AND (@t_pc_incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+            WHERE p.nro = "@nro"
+                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
             GROUP BY t.t_id;'
     params:
-      - name: t_pc_nro
+      - name: nro
         description: 'Poem ID'
         widget: textInput
-      - name: t_pc_incl_erab_orig
+      - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
   tree_octavo:
     type: tree
     description: 'tree: Custom Octavo query'
     source: octavo
-    query: '@t_octavo_query'
+    query: '@octavo_query'
     fields:
       - theme_id
-    level: '@t_octavo_level'
+    level: '@octavo_level'
     group_by: theme_id
     params:
-      - name: t_octavo_query
+      - name: octavo_query
         description: 'Query'
         widget: textAreaInput
         rows: 5
-      - name: t_octavo_level
+      - name: octavo_level
         description: 'Level'
         widget: selectInput
         choices: [ VERSE, POEM ]
@@ -453,9 +454,9 @@ visualizations:
     helptext: 'The resulting table should contain the following columns:
                `x` for original type ID (`themes.theme_id` in the DB) and `y`
                for the value to display.'
-    query: '@t_query'
+    query: '@query'
     params:
-      - name: t_query
+      - name: query
         description: 'Query'
         widget: textAreaInput
         rows: 5
@@ -481,43 +482,43 @@ visualizations:
             FROM p_year
               NATURAL JOIN p_loc
               NATURAL JOIN locations
-            WHERE name = "@tl_parish_name"
+            WHERE name = "@parish_name"
             GROUP BY year;'
     params:
-      - name: tl_parish_name
+      - name: parish_name
         description: 'Parish'
         widget: selectizeInput
         choices_query: places
 visualization_types:
   map:
     params:
-      - name: map_style
+      - name: style
         description: Style
         widget: selectInput
         choices: [ cat, cont, sd, equal, fisher, fixed, log10, order, quantile, pretty ]
         default: fisher
-      - name: map_breaks
+      - name: breaks
         description: Breaks (comma-separated)
-        condition: 'input.map_style == "fixed"'
+        condition: 'input.map__style == "fixed"'
         widget: textInput
-      - name: map_classes
+      - name: classes
         description: Number of classes
-        condition: 'input.map_style != "fixed"'
+        condition: 'input.map__style != "fixed"'
         widget: numericInput
         default: 5
-      - name: map_palette
+      - name: palette
         description: Palette
         widget: selectInput
         choices: [ YlOrRd, YlOrBr, YlGnBu, YlGn, Reds, Oranges, Greens, Blues,
                    plasma, viridis, Set1, Set2, Set3, Accent ]
         default: YlOrRd
-      - name: map_title
+      - name: title
         description: Title
         widget: textInput
-      - name: map_var
+      - name: var
         description: Variable name
         widget: textInput
-      - name: map_region
+      - name: region
         description: Region
         widget: selectInput
         choices:
@@ -526,21 +527,21 @@ visualization_types:
           'South (Estonia)': 'viP viE'
   timeline:
     params:
-      - name: tl_min
+      - name: min
         description: From year
         widget: numericInput
         default: 1800
-      - name: tl_max
+      - name: max
         description: To year
         widget: numericInput
         default: 1930
-      - name: tl_by
+      - name: by
         description: By
         widget: radioButtons
         choices: [ decade, year ]
   tree:
     params:
-      - name: tree_type
+      - name: type
         description: Type
         widget: radioButtons
         choices: [ treemap, sunburst ]

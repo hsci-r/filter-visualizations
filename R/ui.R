@@ -34,23 +34,24 @@ getvalue <- function (x) {
 }
 
 
-make_input <- function(x) {
+make_input <- function(x, prefix='') {
+  name = paste0(prefix, x$name)
   w <- switch(x$widget,
-    'checkboxInput' = checkboxInput(inputId = x$name, label = x$description,
+    'checkboxInput' = checkboxInput(inputId = name, label = x$description,
                                     value = ifelse(is.null(x$value),
                                                    FALSE, as.logical(x$value))),
-    'numericInput' = numericInput(inputId = x$name, label = x$description,
+    'numericInput' = numericInput(inputId = name, label = x$description,
                                   value = getvalue(x)),
-    'radioButtons' = radioButtons(inputId = x$name, label = x$description,
+    'radioButtons' = radioButtons(inputId = name, label = x$description,
                                   choices = x$choices, selected = getvalue(x)),
-    'selectInput' = selectInput(inputId = x$name, label = x$description,
+    'selectInput' = selectInput(inputId = name, label = x$description,
                                 choices=x$choices, selected=getvalue(x)),
-    'selectizeInput' = selectizeInput(inputId = x$name, label = x$description,
+    'selectizeInput' = selectizeInput(inputId = name, label = x$description,
                                       choices=c(x$value, x[['choices']]),
                                       selected=getvalue(x)),
-    'textInput' = textInput(inputId = x$name, label = x$description,
+    'textInput' = textInput(inputId = name, label = x$description,
                             value = getvalue(x)),
-    'textAreaInput' = textAreaInput(inputId = x$name, label = x$description,
+    'textAreaInput' = textAreaInput(inputId = name, label = x$description,
                                     rows=x$rows, value=getvalue(x))
   )
   w <- disableIf(!is.null(x$value), w)
@@ -67,7 +68,7 @@ make_vis_params_panel <- function(x) {
       condition = paste0('input.vis == "', x$name, '"'),
       helpText(x$helptext)
       ),
-      lapply(x$params, make_input)
+      lapply(x$params, function(y) make_input(y, prefix=paste0(x$name, '__')))
     )
   )
 }
@@ -78,7 +79,7 @@ make_vistype_params_panel <- function(x) {
     c(list(
       condition = paste0('input.vis.startsWith("', x$name, '")')
       ),
-      lapply(x$params, make_input)
+      lapply(x$params, function(y) make_input(y, prefix=paste0(x$name, '__')))
     )
   )
 }

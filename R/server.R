@@ -133,14 +133,14 @@ read_themes <- function() {
   themes
 }
 
-insert_params <- function(string, input, params) {
+insert_params <- function(string, input, params, prefix='') {
   ifelse(
     is.null(params),
     string,
     stri_replace_all_regex(
       string,
       paste0('@', sapply(params, function(x) x$name)),
-      sapply(params, function(x) input[[x$name]]),
+      sapply(params, function(x) input[[paste0(prefix, x$name)]]),
       vectorize_all=F
     )
   )
@@ -177,9 +177,9 @@ server <- function(input, output, session) {
   df <- reactive({
     req(input$vis)
     v <- config$visualizations[[input$vis]]
-    q <- insert_params(v$query, input, v$params)
+    q <- insert_params(v$query, input, v$params, prefix=paste0(input$vis, '__'))
     if (v$source == "octavo") {
-      lvl <- insert_params(v$level, input, v$params)
+      lvl <- insert_params(v$level, input, v$params, prefix=paste0(input$vis, '__'))
     }
     switch(v$source,
       'csv' = read.csv(text = q),
@@ -192,17 +192,17 @@ server <- function(input, output, session) {
 
   # map
   tmap <- reactive({
-    breaks <- sapply(unlist(stri_split_fixed(input$map_breaks, ',')), as.numeric)
-    langs <- unlist(stri_split_fixed(input$map_region, ' '))
+    breaks <- sapply(unlist(stri_split_fixed(input$map__breaks, ',')), as.numeric)
+    langs <- unlist(stri_split_fixed(input$map__region, ' '))
     tm_shape(
       areas %>%
         filter(lang %in% langs) %>%
         left_join(df(), by=c('parish_name' = 'x'))
     ) + tm_polygons(col="y", id="parish_name",
-                    palette=input$map_palette, style=input$map_style,
-                    n = input$map_classes, breaks=breaks,
-                    title = input$map_var, textNA="\u2014"
-    ) + tm_layout(title = input$map_title,
+                    palette=input$map__palette, style=input$map__style,
+                    n = input$map__classes, breaks=breaks,
+                    title = input$map__var, textNA="\u2014"
+    ) + tm_layout(title = input$map__title,
                   legend.format = list(text.separator='\u2013'))
   })
   output$tmap <- renderTmap({ tmap() })
@@ -242,7 +242,7 @@ server <- function(input, output, session) {
              fontcolor = tree.fontcolors[cat])
     # plot
     plot_ly(df3, ids=~theme_id, labels=~name, parents=~parent, values=~y,
-            type=input$tree_type, branchvalues='total',
+            type=input$tree__type, branchvalues='total',
             marker=list(colors=~color),
             textfont=list(color=~fontcolor),
             hoverlabel=list(font=list(color=~fontcolor)))
@@ -254,7 +254,8 @@ server <- function(input, output, session) {
     switch(v$type,
       'barplot' = ggplot(df(), aes(x, y))
                   + geom_bar(stat='identity') + coord_flip(),
-      'timeline' = plot_timeline(df(), input$tl_min, input$tl_max, input$tl_by)
+      'timeline' = plot_timeline(df(), input$timeline__min,
+                                 input$timeline__max, input$timeline__by)
     )
   }) %>% bindEvent(input$refresh, ignoreNULL=T)
   output$dt <- DT::renderDataTable(df())
@@ -265,8 +266,10 @@ server <- function(input, output, session) {
       paste(
         c('vis', sapply(params, function(x) x$name)),
         c(input$vis,
-          sapply(params, function(x) URLencode(as.character(input[[x$name]]),
-                                               reserved=T)
+          sapply(params,
+                 function(x) URLencode(
+                     as.character(input[[paste0(input$vis, '__', x$name)]]),
+                     reserved=T)
           )
         ),
         sep = '=', collapse = '&'
@@ -279,7 +282,7 @@ server <- function(input, output, session) {
   # download handlers
   dl_filename <- reactive({
     params <- config$visualizations[[input$vis]]$params
-    values <- sapply(params, function(x) as.character(input[[x$name]]))
+    values <- sapply(params, function(x) as.character(input[[paste0(input$vis, '__', x$name)]]))
     stri_replace_all_charclass(
       paste(c(input$vis, values), collapse='_'),
       '[*:\\p{WHITE_SPACE}]', '_'
@@ -315,9 +318,10 @@ server <- function(input, output, session) {
     v <- config$visualizations[[input$vis]]
     for (p in v$params) {
       if (!is.null(p$choices_query)) {
-        if (input[[p$name]] == '') {
+        name = paste0(input$vis, '__', p$name)
+        if (input[[name]] == '') {
           updateSelectizeInput(
-            session, p$name, server=T,
+            session, name, server=T,
             choices = c('Select...' = '', setNames(chq[[p$choices_query]]$value,
                                                    chq[[p$choices_query]]$label)))
         }
