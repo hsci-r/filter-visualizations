@@ -33,6 +33,21 @@ visualizations:
     source: sql
     query: 'SELECT name AS x, nwords AS y
             FROM locations NATURAL JOIN location_stats;'
+  map_ntypes:
+    type: map
+    description: 'map: Number of types'
+    source: sql
+    query: 'SELECT l.name AS x, COUNT(DISTINCT pt.t_id) AS y
+            FROM poem_theme pt
+              JOIN themes t ON pt.t_id = t.t_id
+              JOIN p_loc ON pt.p_id = p_loc.p_id
+              JOIN locations l ON l.loc_id = p_loc.loc_id
+            WHERE (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+            GROUP BY l.loc_id;'
+    params:
+      - name: incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
   map_type:
     type: map
     description: 'map: Number of poems by type'
