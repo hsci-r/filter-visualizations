@@ -20,19 +20,19 @@ visualizations:
     description: 'map: Number of poems'
     source: sql
     query: 'SELECT name AS x, npoems AS y
-            FROM locations NATURAL JOIN location_stats;'
+            FROM locations NATURAL JOIN location_stats WHERE npoems > 0;'
   map_nverses:
     type: map
     description: 'map: Number of verses'
     source: sql
     query: 'SELECT name AS x, nverses AS y
-            FROM locations NATURAL JOIN location_stats;'
+            FROM locations NATURAL JOIN location_stats WHERE nverses > 0;'
   map_nwords:
     type: map
     description: 'map: Number of words'
     source: sql
     query: 'SELECT name AS x, nwords AS y
-            FROM locations NATURAL JOIN location_stats;'
+            FROM locations NATURAL JOIN location_stats WHERE nwords > 0;'
   map_ntypes:
     type: map
     description: 'map: Number of types'
@@ -151,7 +151,7 @@ visualizations:
               JOIN p_loc ON vp.p_id = p_loc.p_id
               JOIN locations l ON p_loc.loc_id = l.loc_id
               JOIN location_stats ls ON l.loc_id = ls.loc_id
-            WHERE w.text @operator "@word"
+            WHERE w.text @operator "@word" AND ls.nwords > 0
             GROUP BY l.loc_id;'
     params:
       - name: word
