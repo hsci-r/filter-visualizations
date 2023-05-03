@@ -1,4 +1,4 @@
-FROM docker-registry.rahti.csc.fi/filter/shiny-verse:4.1.2
+FROM rocker/shiny-verse:4.1.2
 
 RUN apt-get update -qq && apt-get -y --no-install-recommends install \
   libnss-wrapper \
