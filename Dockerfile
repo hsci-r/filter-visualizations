@@ -1,4 +1,4 @@
-FROM docker-registry.default.svc:5000/filter/shiny-verse:4.1.2
+FROM quay.io/hsci/shiny-verse:4.1.2
 
 RUN apt-get update -qq && apt-get -y --no-install-recommends install \
   libnss-wrapper \
