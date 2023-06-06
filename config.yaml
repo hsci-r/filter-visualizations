@@ -65,7 +65,7 @@ visualizations:
     type: map
     description: 'map: Number of poems by type'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name AS x, count(*) AS y
+    query: 'SELECT pol_loc.pol_id, pol.name AS x, count(DISTINCT p_loc.p_id) AS y
             FROM poem_theme pt
               JOIN themes t1 ON pt.t_id = t1.t_id
               LEFT JOIN themes t2 ON t1.par_id = t2.t_id
