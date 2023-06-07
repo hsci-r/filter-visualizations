@@ -93,6 +93,10 @@ read_areas <- function() {
   st_make_valid(df)
 }
 
+read_place.poly <- function() {
+  query_db('SELECT pol_id, loc_orig_id AS place_id FROM pol_loc NATURAL JOIN locations;')
+}
+
 read_themes <- function() {
   themes <- query_db(paste(
     'SELECT ',
@@ -186,6 +190,7 @@ server <- function(input, output, session) {
   tmap_options(check.and.fix=T)
   areas <- read_areas()
   themes <- read_themes()
+  place.poly <- read_place.poly()
   is.interactive <- reactive(as.logical(input$interactive))
 
   # data
@@ -210,10 +215,18 @@ server <- function(input, output, session) {
   tmap <- reactive({
     breaks <- sapply(unlist(stri_split_fixed(input$map__breaks, ',')), as.numeric)
     langs <- unlist(stri_split_fixed(input$map__region, ' '))
+    df <- df()
+    # if no polygon ID -- add them based on place IDs and regroup
+    if (!('pol_id' %in% names(df))) {
+      df <- df %>%
+        inner_join(place.poly, by=c(x = 'place_id')) %>%
+        group_by(pol_id) %>%
+        summarize(y = sum(y))
+    }
     tm_shape(
       areas %>%
         filter(lang %in% langs) %>%
-        left_join(df(), by=c('pol_id'))
+        left_join(df, by='pol_id')
     ) + tm_polygons(col="y", id="parish_name",
                     palette=input$map__palette, style=input$map__style,
                     n = input$map__classes, breaks=breaks,

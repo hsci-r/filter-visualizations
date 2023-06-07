@@ -276,8 +276,8 @@ visualizations:
     query: '@octavo_query'
     level: '@octavo_level'
     fields:
-      - place_name
-    group_by: place_name
+      - place_id
+    group_by: place_id
     params:
       - name: octavo_query
         description: 'Query'
