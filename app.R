@@ -1,5 +1,6 @@
 library(plotly)
 library(shiny)
+library(shinybrowser)
 library(shinyjs)
 library(tmap)
 library(yaml)

@@ -149,7 +149,8 @@ ui <- function(request) {
                                  sapply(sb_vis_widgets_lst, function(x) x$description))),
             selected = qp$vis
           )
-        )
+        ),
+        hidden(checkboxInput(inputId = 'interactive', label = "", value = interactive))
       ),
       lapply(sb_vis_widgets_lst, make_vis_params_panel),
       lapply(sb_vistype_widgets_lst, make_vistype_params_panel),
@@ -168,6 +169,7 @@ ui <- function(request) {
     )
     fluidPage(
       useShinyjs(),
+      shinybrowser::detect(),
       resizeDetection(), 
       titlePanel("FILTER Visualizations"),
 

@@ -20,6 +20,7 @@ RUN install2.r --error \
   yaml \
   shinyAce \
   shinyjs \
+  shinybrowser \
   altair \
   tmap \
   httr \

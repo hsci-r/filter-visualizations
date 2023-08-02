@@ -47,6 +47,13 @@ query_db <- function(q) {
   data
 }
 
+write_log_to_db <- function(url, rtime, user_agent) {
+  con <- connect_to_db()
+  dbAppendTable(con, 'visualizations_log',
+                data.frame(url=url, rtime=as.double(rtime), user_agent=user_agent))
+  dbDisconnect(con)
+}
+
 get_csv_from_url <- function(url, grouping.var) {
   df <- read.csv(url) %>%
     rename(x = grouping.var) %>%
@@ -59,6 +66,23 @@ get_csv_from_url <- function(url, grouping.var) {
     df$x <- stri_replace_all_regex(df$x, '.* — ', '')
   }
   df
+}
+
+make_url <- function(input, params) {
+  paste0(
+    '/?',
+    paste(
+      c('vis', sapply(params, function(x) x$name)),
+      c(input$vis,
+        sapply(params,
+               function(x) URLencode(
+                   as.character(input[[paste0(input$vis, '__', x$name)]]),
+                   reserved=T)
+        )
+      ),
+      sep = '=', collapse = '&'
+    )
+  )
 }
 
 query_octavo <- function(endpoint, query, level, fields, grouping.var, limit=20, offset=0) {
@@ -191,31 +215,37 @@ server <- function(input, output, session) {
   areas <- read_areas()
   themes <- read_themes()
   place.poly <- read_place.poly()
-  is.interactive <- reactive(as.logical(input$interactive))
-
+  
   # data
-  df <- reactive({
+  get_data <- reactive({
     req(input$vis)
+    t1 <- Sys.time()
     v <- config$visualizations[[input$vis]]
     q <- insert_params(v$query, input, v$params, prefix=paste0(input$vis, '__'))
+    url <- make_url(input, v$params)
     if (v$source == "octavo") {
       lvl <- insert_params(v$level, input, v$params, prefix=paste0(input$vis, '__'))
     }
-    switch(v$source,
+    data <- switch(v$source,
       'csv' = read.csv(text = q),
       'sql' = query_db(q),
       'url' = get_csv_from_url(q, v$group_by),
       'octavo' = query_octavo(config$global$octavo_endpoint, q,
                               lvl, v$fields, v$group_by, limit=-1)
     )
+    t2 <- Sys.time()
+    if (nchar(Sys.getenv('ENABLE_LOGGING_TO_DB')) > 0) {
+      write_log_to_db(url, t2-t1, shinybrowser::get_user_agent())
+    }
+    data
   }) %>%
-  bindEvent(input$refresh, ignoreNULL=F)
+    bindEvent(input$refresh, ignoreNULL=T)
 
   # map
   tmap <- reactive({
     breaks <- sapply(unlist(stri_split_fixed(input$map__breaks, ',')), as.numeric)
     langs <- unlist(stri_split_fixed(input$map__region, ' '))
-    df <- df()
+    df <- get_data()
     # if no polygon ID -- add them based on place IDs and regroup
     if (!('pol_id' %in% names(df))) {
       df <- df %>%
@@ -239,7 +269,7 @@ server <- function(input, output, session) {
   # type tree
   output$tree <- renderPlotly({
     v <- config$visualizations[[input$vis]]
-    df <- df()
+    df <- get_data()
     # join with the type hierarchy
     df2 <- df %>%
       inner_join(themes, by = c('x' = 'theme_id_1'), suffix=c('.x', ''))
@@ -281,29 +311,16 @@ server <- function(input, output, session) {
   output$plot <- renderPlot({
     v <- config$visualizations[[input$vis]]
     switch(v$type,
-      'barplot' = ggplot(df(), aes(x, y))
+      'barplot' = ggplot(get_data(), aes(x, y))
                   + geom_bar(stat='identity') + coord_flip(),
-      'timeline' = plot_timeline(df(), input$timeline__min,
+      'timeline' = plot_timeline(get_data(), input$timeline__min,
                                  input$timeline__max, input$timeline__by)
     )
   }) %>% bindEvent(input$refresh, ignoreNULL=T)
-  output$dt <- DT::renderDataTable(df())
+  output$dt <- DT::renderDataTable(get_data())
   output$link <- renderUI({
     params <- config$visualizations[[input$vis]]$params
-    url <- paste0(
-      '/?',
-      paste(
-        c('vis', sapply(params, function(x) x$name)),
-        c(input$vis,
-          sapply(params,
-                 function(x) URLencode(
-                     as.character(input[[paste0(input$vis, '__', x$name)]]),
-                     reserved=T)
-          )
-        ),
-        sep = '=', collapse = '&'
-      )
-    )
+    url <- make_url(input, params)
     tags$a(href=url, 'permalink')
   }) %>%
     bindEvent(input$refresh, ignoreNULL=T)
@@ -355,6 +372,14 @@ server <- function(input, output, session) {
                                                    chq[[p$choices_query]]$label)))
         }
       }
+    }
+  })
+
+  # If non-interactive -> simulate a click on the refresh button
+  # to trigger the data loading.
+  observe({
+    if (!input$interactive) {
+      click('refresh')
     }
   })
 }
