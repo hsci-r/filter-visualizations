@@ -1,4 +1,4 @@
-FROM quay.io/hsci/shiny-verse:4.3.0
+FROM quay.io/hsci/shiny-verse:4.2.3
 
 RUN apt-get update -qq && apt-get -y --no-install-recommends install \
   libnss-wrapper \
