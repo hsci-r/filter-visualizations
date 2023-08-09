@@ -125,9 +125,11 @@ ui <- function(request) {
       sb_vis_widgets_lst[[n]]$name <- n
     }
     if (!interactive) {
-      for (i in 1:(length(sb_vis_widgets_lst[[qp$vis]]$params))) {
-        sb_vis_widgets_lst[[qp$vis]]$params[[i]]$value <-
-          qp[[sb_vis_widgets_lst[[qp$vis]]$params[[i]]$name]]
+      if (length(sb_vis_widgets_lst[[qp$vis]]$params) > 0) {
+        for (i in 1:(length(sb_vis_widgets_lst[[qp$vis]]$params))) {
+          sb_vis_widgets_lst[[qp$vis]]$params[[i]]$value <-
+            qp[[sb_vis_widgets_lst[[qp$vis]]$params[[i]]$name]]
+        }
       }
     }
     names(sb_vis_widgets_lst) <- NULL
