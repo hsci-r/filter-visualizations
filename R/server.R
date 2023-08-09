@@ -183,7 +183,9 @@ insert_params <- function(string, input, params, prefix='') {
     stri_replace_all_regex(
       string,
       paste0('@', sapply(params, function(x) x$name)),
-      sapply(params, function(x) input[[paste0(prefix, x$name)]]),
+      sapply(params, function(x) stri_replace_all_regex(
+                                     input[[paste0(prefix, x$name)]],
+                                     '\\$', '\\\\\\$')),
       vectorize_all=F
     )
   )
