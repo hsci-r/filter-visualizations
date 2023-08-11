@@ -292,7 +292,9 @@ visualizations:
     description: 'map: Custom SQL query'
     source: sql
     helptext: 'The resulting table should contain the following columns:
-               `pol_id` for polygon ID and `y` for the value to display.'
+               either `pol_id` (for polygon ID), `place_id` or
+               `place_name` to identify the place, and `y` for the value
+               to display. Only using polygon IDs guarantees correct results.'
     query: '@query'
     params:
       - name: query
@@ -304,8 +306,10 @@ visualizations:
     description: 'map: Custom CSV'
     source: csv
     helptext: 'The CSV should contain at least the following columns:
-               `pol_id` for polygon ID and `y` for the value to display.
-               Header is obligatory.'
+               either `pol_id` (for polygon ID), `place_id` or
+               `place_name` to identify the place, and `y` for the value
+               to display. Only using polygon IDs guarantees correct results.
+               A header is obligatory.'
     query: '@csv'
     params:
       - name: csv

@@ -248,12 +248,21 @@ server <- function(input, output, session) {
     breaks <- sapply(unlist(stri_split_fixed(input$map__breaks, ',')), as.numeric)
     langs <- unlist(stri_split_fixed(input$map__region, ' '))
     df <- get_data()
-    # if no polygon ID -- add them based on place IDs and regroup
     if (!('pol_id' %in% names(df))) {
-      df <- df %>%
-        inner_join(place.poly, by=c(x = 'place_id')) %>%
-        group_by(pol_id) %>%
-        summarize(y = sum(y))
+      # if no polygon ID -- add them based on place IDs and regroup
+      if ('place_id' %in% names(df)) {
+        df <- df %>%
+          inner_join(place.poly, by='place_id') %>%
+          group_by(pol_id) %>%
+          summarize(y = sum(y))
+      } else {
+        # if no place IDs -- match based on names as last resort
+        df <- df %>%
+          inner_join(areas %>% select(pol_id, parish_name),
+                     by=c(place_name = 'parish_name')) %>%
+          group_by(pol_id) %>%
+          summarize(y = sum(y))
+      }
     }
     tm_shape(
       areas %>%
