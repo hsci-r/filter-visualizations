@@ -56,14 +56,14 @@ write_log_to_db <- function(url, rtime, user_agent) {
 
 get_csv_from_url <- function(url, grouping.var) {
   df <- read.csv(url) %>%
-    rename(x = grouping.var) %>%
-    separate_rows(x, sep='; ') %>%
-    group_by(x) %>%
+    separate_rows(grouping.var, sep='; ') %>%
+    group_by_at(grouping.var) %>%
     summarize(y = n()) %>%
-    filter(x != "")
+    filter(grouping.var != "")
   # workaround for place names: "County — Parish" -> "Parish"
-  if (grouping.var == 'location') {
-    df$x <- stri_replace_all_regex(df$x, '.* — ', '')
+  if (grouping.var == 'place') {
+    df <- df %>% rename(place_name = place)
+    df$place_name <- stri_replace_all_regex(df$place_name, '.* — ', '')
   }
   df
 }
@@ -103,9 +103,11 @@ query_octavo <- function(endpoint, query, level, fields, grouping.var, limit=20,
   if (grouping.var == 'place_name') {
     x <- stri_replace_all_regex(x, ', .*', '')
   }
-  data.frame(x = x) %>%
+  df <- data.frame(x = x) %>%
     group_by(x) %>%
     summarize(y = n())
+  names(df) <- c(grouping.var, 'y')
+  df
 }
 
 read_areas <- function() {
@@ -118,38 +120,38 @@ read_areas <- function() {
 }
 
 read_place.poly <- function() {
-  query_db('SELECT pol_id, loc_orig_id AS place_id FROM pol_loc NATURAL JOIN locations;')
+  query_db('SELECT pol_id, place_orig_id AS place_id FROM pol_pl NATURAL JOIN places;')
 }
 
-read_themes <- function() {
-  themes <- query_db(paste(
+read_types <- function() {
+  types <- query_db(paste(
     'SELECT ',
-    '  t1.theme_id AS theme_id_1, t1.name AS name_1, t2.theme_id as parent_1, ',
-    '  t2.theme_id AS theme_id_2, t2.name AS name_2, t3.theme_id as parent_2, ',
-    '  t3.theme_id AS theme_id_3, t3.name AS name_3, t4.theme_id as parent_3, ',
-    '  t4.theme_id AS theme_id_4, t4.name AS name_4 ',
+    '  t1.type_orig_id AS type_id_1, t1.name AS name_1, t2.type_orig_id as parent_1, ',
+    '  t2.type_orig_id AS type_id_2, t2.name AS name_2, t3.type_orig_id as parent_2, ',
+    '  t3.type_orig_id AS type_id_3, t3.name AS name_3, t4.type_orig_id as parent_3, ',
+    '  t4.type_orig_id AS type_id_4, t4.name AS name_4 ',
     'FROM ',
-    '  themes t1',
-    '  LEFT JOIN themes t2 ON t1.par_id = t2.t_id',
-    '  LEFT JOIN themes t3 ON t2.par_id = t3.t_id',
-    '  LEFT JOIN themes t4 ON t3.par_id = t4.t_id',
-    'WHERE t1.theme_id NOT LIKE "kt_%"',
+    '  types t1',
+    '  LEFT JOIN types t2 ON t1.par_id = t2.t_id',
+    '  LEFT JOIN types t3 ON t2.par_id = t3.t_id',
+    '  LEFT JOIN types t4 ON t3.par_id = t4.t_id',
+    'WHERE t1.type_orig_id NOT LIKE "kt_%"',
     ';'
   ))
-  themes <- themes %>%
-    anti_join(themes %>%
+  types <- types %>%
+    anti_join(types %>%
       filter(!is.na(parent_1)) %>%
       select(parent_1) %>%
-      rename(theme_id_1 = parent_1) %>%
+      rename(type_id_1 = parent_1) %>%
       unique()) %>%
     mutate(
       parent_4 = NA_character_,
       tlc = case_when(
-        !is.na(theme_id_4) ~ theme_id_4,
-        !is.na(theme_id_3) ~ theme_id_3,
-        !is.na(theme_id_2) ~ theme_id_2,
-        grepl('erab_orig', theme_id_1) | nchar(theme_id_1) > 8 ~ NA_character_,
-        !is.na(theme_id_1) ~ theme_id_1
+        !is.na(type_id_4) ~ type_id_4,
+        !is.na(type_id_3) ~ type_id_3,
+        !is.na(type_id_2) ~ type_id_2,
+        grepl('erab_orig', type_id_1) | nchar(type_id_1) > 8 ~ NA_character_,
+        !is.na(type_id_1) ~ type_id_1
       ),
       cat = case_when(
         tlc == 'skvr_t01' ~  1,
@@ -173,7 +175,7 @@ read_themes <- function() {
         TRUE              ~  11
       ),
     )
-  themes
+  types
 }
 
 insert_params <- function(string, input, params, prefix='') {
@@ -215,7 +217,7 @@ server <- function(input, output, session) {
   config <- read_yaml('config.yaml')
   tmap_options(check.and.fix=T)
   areas <- read_areas()
-  themes <- read_themes()
+  types <- read_types()
   place.poly <- read_place.poly()
   
   # data
@@ -281,37 +283,41 @@ server <- function(input, output, session) {
   output$tree <- renderPlotly({
     v <- config$visualizations[[input$vis]]
     df <- get_data()
+    # FIXME workaround -- in Octavo the field is still called "theme_id"
+    if ('theme_id' %in% names(df)) {
+      df <- df %>% rename(type_id = theme_id)
+    }
     # join with the type hierarchy
     df2 <- df %>%
-      inner_join(themes, by = c('x' = 'theme_id_1'), suffix=c('.x', ''))
+      inner_join(types, by = c(type_id = 'type_id_1'), suffix=c('.x', ''))
     # compute sums for the higher hierarchy levels
     df3 <- df2 %>%
-      select(theme_id = x, name = name_1, parent = parent_1,
+      select(type_id, name = name_1, parent = parent_1,
              y = y, cat = cat) %>%
       mutate(level = 1) %>%
       union(df2 %>%
-        filter(!is.na(theme_id_2)) %>%
-        group_by(theme_id = theme_id_2) %>%
+        filter(!is.na(type_id_2)) %>%
+        group_by(type_id = type_id_2) %>%
         summarize(name = first(name_2), parent = first(parent_2),
                   y = sum(y), cat = first(cat), level = 2)) %>%
       union(df2 %>%
-        filter(!is.na(theme_id_3)) %>%
-        group_by(theme_id = theme_id_3) %>%
+        filter(!is.na(type_id_3)) %>%
+        group_by(type_id = type_id_3) %>%
         summarize(name = first(name_3), parent = first(parent_3),
                   y = sum(y), cat = first(cat), level = 3)) %>%
       union(df2 %>%
-        filter(!is.na(theme_id_4)) %>%
-        group_by(theme_id = theme_id_4) %>%
+        filter(!is.na(type_id_4)) %>%
+        group_by(type_id = type_id_4) %>%
         summarize(name = first(name_4), parent = first(parent_4),
                   y = sum(y), cat = first(cat), level = 4)) %>%
-      group_by(theme_id) %>%
+      group_by(type_id) %>%
       summarize(name = first(name), parent = first(parent),
                 y = sum(y), cat = first(cat), level = max(level)) %>%
-      arrange(desc(level), theme_id) %>%
+      arrange(desc(level), type_id) %>%
       mutate(color = tree.colors[cbind(cat, level)],
              fontcolor = tree.fontcolors[cat])
     # plot
-    plot_ly(df3, ids=~theme_id, labels=~name, parents=~parent, values=~y,
+    plot_ly(df3, ids=~type_id, labels=~name, parents=~parent, values=~y,
             type=input$tree__type, branchvalues='total',
             marker=list(colors=~color),
             textfont=list(color=~fontcolor),

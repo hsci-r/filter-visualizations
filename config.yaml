@@ -2,14 +2,14 @@ global:
   octavo_endpoint: https://filter-octavo.rahtiapp.fi/filter/
 choices_queries:
   collectors: 'SELECT name AS value FROM collectors;'
-  places: 'SELECT IF(lp.name IS NOT NULL,
-                     CONCAT(l.name, " (", lp.name, ")"),
-                     l.name) as label,
-                  l.name as value
-           FROM locations l
-             LEFT JOIN locations lp ON l.par_id = lp.loc_id;'
-  themes: 'SELECT CONCAT(name, " (", theme_id, ")") as label, theme_id as value
-           FROM themes;'
+  places: 'SELECT IF(plp.name IS NOT NULL,
+                     CONCAT(pl.name, " (", plp.name, ")"),
+                     pl.name) as label,
+                  pl.name as value
+           FROM places pl
+             LEFT JOIN places plp ON pl.par_id = plp.pl_id;'
+  types: 'SELECT CONCAT(name, " (", type_orig_id, ")") as label, type_orig_id as value
+          FROM types;'
   clusterings: 'SELECT name AS label, clustering_id AS value FROM v_clusterings;'
   skvr_volumes: 'SELECT DISTINCT value
                  FROM raw_meta NATURAL JOIN poems
@@ -19,44 +19,44 @@ visualizations:
     type: map
     description: 'map: Number of poems'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, SUM(ls.npoems) AS y
-            FROM location_stats ls
-              JOIN pol_loc ON ls.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
-            WHERE ls.npoems > 0
-            GROUP BY pol_loc.pol_id;'
+    query: 'SELECT pol_pl.pol_id, pol.name, SUM(pls.npoems) AS y
+            FROM place_stats pls
+              JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+            WHERE pls.npoems > 0
+            GROUP BY pol_pl.pol_id;'
   map_nverses:
     type: map
     description: 'map: Number of verses'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, SUM(ls.nverses) AS y
-            FROM location_stats ls
-              JOIN pol_loc ON ls.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
-            WHERE ls.nverses > 0
-            GROUP BY pol_loc.pol_id;'
+    query: 'SELECT pol_pl.pol_id, pol.name, SUM(pls.nverses) AS y
+            FROM place_stats pls
+              JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+            WHERE pls.nverses > 0
+            GROUP BY pol_pl.pol_id;'
   map_nwords:
     type: map
     description: 'map: Number of words'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, SUM(ls.nwords) AS y
-            FROM location_stats ls
-              JOIN pol_loc ON ls.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
-            WHERE ls.nwords > 0
-            GROUP BY pol_loc.pol_id;'
+    query: 'SELECT pol_pl.pol_id, pol.name, SUM(pls.nwords) AS y
+            FROM place_stats pls
+              JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+            WHERE pls.nwords > 0
+            GROUP BY pol_pl.pol_id;'
   map_ntypes:
     type: map
     description: 'map: Number of types'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, COUNT(DISTINCT pt.t_id) AS y
-            FROM poem_theme pt
-              JOIN themes t ON pt.t_id = t.t_id
-              JOIN p_loc ON pt.p_id = p_loc.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
-            WHERE (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
-            GROUP BY pol_loc.pol_id;'
+    query: 'SELECT pol_pl.pol_id, pol.name, COUNT(DISTINCT pt.t_id) AS y
+            FROM p_typ pt
+              JOIN types t ON pt.t_id = t.t_id
+              JOIN p_pl ON pt.p_id = p_pl.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+            WHERE (@incl_erab_orig OR t.type_orig_id NOT LIKE "erab_orig%")
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
@@ -65,37 +65,37 @@ visualizations:
     type: map
     description: 'map: Number of poems by type'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name AS x, count(DISTINCT p_loc.p_id) AS y
-            FROM poem_theme pt
-              JOIN themes t1 ON pt.t_id = t1.t_id
-              LEFT JOIN themes t2 ON t1.par_id = t2.t_id
-              LEFT JOIN themes t3 ON t2.par_id = t3.t_id
-              LEFT JOIN themes t4 ON t3.par_id = t4.t_id
-              JOIN p_loc ON pt.p_id = p_loc.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
-            WHERE t1.theme_id = "@theme_id"
-                  OR t2.theme_id = "@theme_id"
-                  OR t3.theme_id = "@theme_id"
-                  OR t4.theme_id = "@theme_id"
-            GROUP BY pol_loc.pol_id;'
+    query: 'SELECT pol_pl.pol_id, pol.name, count(DISTINCT p_pl.p_id) AS y
+            FROM p_typ pt
+              JOIN types t1 ON pt.t_id = t1.t_id
+              LEFT JOIN types t2 ON t1.par_id = t2.t_id
+              LEFT JOIN types t3 ON t2.par_id = t3.t_id
+              LEFT JOIN types t4 ON t3.par_id = t4.t_id
+              JOIN p_pl ON pt.p_id = p_pl.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+            WHERE t1.type_orig_id = "@type_id"
+                  OR t2.type_orig_id = "@type_id"
+                  OR t3.type_orig_id = "@type_id"
+                  OR t4.type_orig_id = "@type_id"
+            GROUP BY pol_pl.pol_id;'
     params:
-      - name: theme_id
+      - name: type_id
         description: 'Type ID'
         widget: selectizeInput
-        choices_query: themes
+        choices_query: types
   map_volume:
     type: map
     description: 'map: Number of poems by SKVR volume'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
             FROM poems p
               JOIN raw_meta rm ON p.p_id = rm.p_id AND rm.field = "OSA"
-              JOIN p_loc ON p.p_id = p_loc.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
+              JOIN p_pl ON p.p_id = p_pl.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE p.nro LIKE "skvr%" AND rm.value = "@volume"
-            GROUP BY pol_loc.pol_id;'
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: volume
         description: 'Volume'
@@ -105,13 +105,13 @@ visualizations:
     type: map
     description: 'map: Number of poems by collector'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
             FROM p_col
               JOIN collectors c ON p_col.col_id = c.col_id
-              JOIN p_loc ON p_col.p_id = p_loc.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
-            WHERE c.name = "@collector" GROUP BY pol_loc.pol_id;'
+              JOIN p_pl ON p_col.p_id = p_pl.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+            WHERE c.name = "@collector" GROUP BY pol_pl.pol_id;'
     params:
       - name: collector
         description: 'Collector name'
@@ -121,13 +121,13 @@ visualizations:
     type: map
     description: 'map: Number of poems in a time interval'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
             FROM p_year
-              JOIN p_loc ON p_year.p_id = p_loc.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
+              JOIN p_pl ON p_year.p_id = p_pl.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE p_year.year BETWEEN @min AND @max
-            GROUP BY pol_loc.pol_id;'
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: min
         description: From year
@@ -141,15 +141,15 @@ visualizations:
     type: map
     description: 'map: Word frequency'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
             FROM words w
               JOIN word_occ wo ON w.w_id = wo.w_id
               JOIN verse_poem vp ON wo.v_id = vp.v_id
-              JOIN p_loc ON vp.p_id = p_loc.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
+              JOIN p_pl ON vp.p_id = p_pl.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE w.text @operator "@word"
-            GROUP BY pol_loc.pol_id;'
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: word
         description: 'Word'
@@ -162,16 +162,16 @@ visualizations:
     type: map
     description: 'map: Word relative frequency'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*)/sum(ls.nwords) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*)/sum(pls.nwords) AS y
             FROM words w
               JOIN word_occ wo ON w.w_id = wo.w_id
               JOIN verse_poem vp ON wo.v_id = vp.v_id
-              JOIN p_loc ON vp.p_id = p_loc.p_id
-              JOIN location_stats ls ON p_loc.loc_id = ls.loc_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
-            WHERE w.text @operator "@word" AND ls.nwords > 0
-            GROUP BY pol_loc.pol_id;'
+              JOIN p_pl ON vp.p_id = p_pl.p_id
+              JOIN place_stats pls ON p_pl.pl_id = pls.pl_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+            WHERE w.text @operator "@word" AND pls.nwords > 0
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: word
         description: 'Word'
@@ -184,7 +184,7 @@ visualizations:
     type: map
     description: 'map: Verse cluster'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
             FROM verse_poem vp1
               JOIN poems p1 ON vp1.p_id = p1.p_id
               JOIN v_clust vc1 ON vc1.v_id = vp1.v_id
@@ -192,11 +192,11 @@ visualizations:
               JOIN v_clust vc2 ON vc1.clust_id = vc2.clust_id
                                   AND vc2.clustering_id = @clustering
               JOIN verse_poem vp2 ON vp2.v_id = vc2.v_id
-              JOIN p_loc ON p_loc.p_id = vp2.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
+              JOIN p_pl ON p_pl.p_id = vp2.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE p1.nro = "@nro" AND vp1.pos = @pos
-            GROUP BY pol_loc.pol_id;'
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: clustering
         description: 'Clustering'
@@ -213,7 +213,7 @@ visualizations:
     description: 'map: Passage'
     source: url
     query: 'http://runoregi.rahtiapp.fi/passage?nro=@nro&start=@start&end=@end&clustering=@clustering&dist=@dist&hitfact=@hitfact&format=csv'
-    group_by: location
+    group_by: place
     params:
       - name: clustering
         description: 'Clustering'
@@ -240,15 +240,15 @@ visualizations:
     type: map
     description: 'map: Poem cluster'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
             FROM poems p
               JOIN p_clust pc1 ON p.p_id = pc1.p_id
               JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
-              JOIN p_loc ON p_loc.p_id = pc2.p_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
+              JOIN p_pl ON p_pl.p_id = pc2.p_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE p.nro = "@nro"
-            GROUP BY pol_loc.pol_id;'
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: nro
         description: 'Poem ID'
@@ -257,14 +257,14 @@ visualizations:
     type: map
     description: 'map: Similar poems'
     source: sql
-    query: 'SELECT pol_loc.pol_id, pol.name, count(*) AS y
+    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
             FROM p_sim s
               JOIN poems p1 ON s.p1_id = p1.p_id
-              JOIN p_loc ON p_loc.p_id = s.p2_id
-              JOIN pol_loc ON p_loc.loc_id = pol_loc.loc_id
-              JOIN polygons pol ON pol_loc.pol_id = pol.pol_id
+              JOIN p_pl ON p_pl.p_id = s.p2_id
+              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE p1.nro = "@nro"
-            GROUP BY pol_loc.pol_id;'
+            GROUP BY pol_pl.pol_id;'
     params:
       - name: nro
         description: 'Poem ID'
@@ -320,13 +320,13 @@ visualizations:
     type: tree
     description: 'tree: Poems by type'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
+    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
             FROM
-              themes t
-              JOIN poem_theme pt ON pt.t_id = t.t_id
-            WHERE t.theme_id LIKE "@collection_%"
-                  AND t.theme_id NOT LIKE "erab_orig%"
-                  AND t.theme_id NOT LIKE "kt_%"
+              types t
+              JOIN p_typ pt ON pt.t_id = t.t_id
+            WHERE t.type_orig_id LIKE "@collection_%"
+                  AND t.type_orig_id NOT LIKE "erab_orig%"
+                  AND t.type_orig_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
       - name: collection
@@ -338,15 +338,15 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for collector'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
+    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
             FROM
-              themes t
-              JOIN poem_theme pt ON pt.t_id = t.t_id
+              types t
+              JOIN p_typ pt ON pt.t_id = t.t_id
               JOIN p_col pc ON pt.p_id = pc.p_id
               JOIN collectors c ON pc.col_id = c.col_id
             WHERE c.name = "@collector"
-                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
-                  AND t.theme_id NOT LIKE "kt_%"
+                  AND (@incl_erab_orig OR t.type_orig_id NOT LIKE "erab_orig%")
+                  AND t.type_orig_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
       - name: collector
@@ -360,15 +360,15 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for parish'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
+    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
             FROM
-              themes t
-              JOIN poem_theme pt ON pt.t_id = t.t_id
-              JOIN p_loc ON pt.p_id = p_loc.p_id
-              JOIN locations l ON p_loc.loc_id = l.loc_id
-            WHERE l.name = "@parish_name"
-                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
-                  AND t.theme_id NOT LIKE "kt_%"
+              types t
+              JOIN p_typ pt ON pt.t_id = t.t_id
+              JOIN p_pl ON pt.p_id = p_pl.p_id
+              JOIN places pl ON p_pl.pl_id = pl.pl_id
+            WHERE pl.name = "@parish_name"
+                  AND (@incl_erab_orig OR t.type_orig_id NOT LIKE "erab_orig%")
+                  AND t.type_orig_id NOT LIKE "kt_%"
             GROUP BY t.t_id;'
     params:
       - name: parish_name
@@ -382,14 +382,14 @@ visualizations:
     type: tree
     description: 'tree: Number of poems in a time interval'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name, count(*) AS y
+    query: 'SELECT t.type_orig_id AS type_id, t.name, count(*) AS y
             FROM p_year
               JOIN poems p ON p_year.p_id = p.p_id
-              JOIN poem_theme pt ON p_year.p_id = pt.p_id
-              JOIN themes t ON pt.t_id = t.t_id
+              JOIN p_typ pt ON p_year.p_id = pt.p_id
+              JOIN types t ON pt.t_id = t.t_id
             WHERE p_year.year BETWEEN @min AND @max
                   AND p.collection = "@collection"
-                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+                  AND (@incl_erab_orig OR t.type_orig_id NOT LIKE "erab_orig%")
             GROUP BY t.t_id;'
     params:
       - name: min
@@ -411,10 +411,10 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for SKVR volume'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name, COUNT(*) AS y
+    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
             FROM
-              themes t
-              JOIN poem_theme pt ON pt.t_id = t.t_id
+              types t
+              JOIN p_typ pt ON pt.t_id = t.t_id
               JOIN poems p ON pt.p_id = p.p_id
               JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
             WHERE rm.value = "@volume" AND p.collection = "skvr"
@@ -428,20 +428,20 @@ visualizations:
     type: tree
     description: 'tree: Co-occurring types'
     source: sql
-    query: 'SELECT t1.theme_id AS x, t1.name, COUNT(*) AS y
+    query: 'SELECT t1.type_orig_id AS type_id, t1.name, COUNT(*) AS y
             FROM
-              themes t1
-              JOIN poem_theme pt1 ON pt1.t_id = t1.t_id
-              JOIN poem_theme pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
-              JOIN themes t2 ON pt2.t_id = t2.t_id
-            WHERE t2.theme_id = "@theme_id"
-                  AND (@incl_erab_orig OR t1.theme_id NOT LIKE "erab_orig%")
+              types t1
+              JOIN p_typ pt1 ON pt1.t_id = t1.t_id
+              JOIN p_typ pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
+              JOIN types t2 ON pt2.t_id = t2.t_id
+            WHERE t2.type_orig_id = "@type_id"
+                  AND (@incl_erab_orig OR t1.type_orig_id NOT LIKE "erab_orig%")
             GROUP BY t1.t_id;'
     params:
-      - name: theme_id
+      - name: type_id
         description: 'Type'
         widget: selectizeInput
-        choices_query: themes
+        choices_query: types
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
@@ -450,7 +450,7 @@ visualizations:
     description: 'tree: Verse cluster type distribution'
     source: sql
     query: 'SELECT
-               t.theme_id AS x, t.name, COUNT(*) AS y
+               t.type_orig_id AS type_id, t.name, COUNT(*) AS y
             FROM
               poems p
               JOIN verse_poem vp ON vp.p_id = p.p_id
@@ -459,10 +459,10 @@ visualizations:
               JOIN v_clust vc2 ON vc2.clust_id = vc.clust_id
                                   AND vc2.clustering_id = vc.clustering_id
               JOIN verse_poem vp2 ON vc2.v_id = vp2.v_id
-              JOIN poem_theme pt2 ON vp2.p_id = pt2.p_id
-              JOIN themes t ON pt2.t_id = t.t_id
+              JOIN p_typ pt2 ON vp2.p_id = pt2.p_id
+              JOIN types t ON pt2.t_id = t.t_id
             WHERE p.nro = "@nro" AND vp.pos = @pos
-                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+                  AND (@incl_erab_orig OR t.type_orig_id NOT LIKE "erab_orig%")
             GROUP BY t.t_id;'
     params:
       - name: clustering
@@ -482,14 +482,14 @@ visualizations:
     type: tree
     description: 'tree: Poem cluster type distribution'
     source: sql
-    query: 'SELECT t.theme_id AS x, t.name, count(*) AS y
+    query: 'SELECT t.type_orig_id AS type_id, t.name, count(*) AS y
             FROM poems p
               JOIN p_clust pc1 ON p.p_id = pc1.p_id
               JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
-              JOIN poem_theme pt ON pt.p_id = pc2.p_id
-              JOIN themes t ON t.t_id = pt.t_id
+              JOIN p_typ pt ON pt.p_id = pc2.p_id
+              JOIN types t ON t.t_id = pt.t_id
             WHERE p.nro = "@nro"
-                  AND (@incl_erab_orig OR t.theme_id NOT LIKE "erab_orig%")
+                  AND (@incl_erab_orig OR t.type_orig_id NOT LIKE "erab_orig%")
             GROUP BY t.t_id;'
     params:
       - name: nro
@@ -521,7 +521,7 @@ visualizations:
     description: 'tree: Custom SQL query'
     source: sql
     helptext: 'The resulting table should contain the following columns:
-               `x` for original type ID (`themes.theme_id` in the DB) and `y`
+               `x` for original type ID (`types.type_orig_id` in the DB) and `y`
                for the value to display.'
     query: '@query'
     params:
@@ -549,8 +549,8 @@ visualizations:
     source: sql
     query: 'SELECT year AS x, COUNT(*) AS y
             FROM p_year
-              NATURAL JOIN p_loc
-              NATURAL JOIN locations
+              NATURAL JOIN p_pl
+              NATURAL JOIN places
             WHERE name = "@parish_name"
             GROUP BY year;'
     params:
