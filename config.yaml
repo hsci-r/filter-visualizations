@@ -278,6 +278,9 @@ visualizations:
     fields:
       - place_id
     group_by: place_id
+    extractor: 'function(x) x$place_id'
+    varname: place_id
+    snippets: false
     params:
       - name: octavo_query
         description: 'Query'
@@ -505,8 +508,10 @@ visualizations:
     query: '@octavo_query'
     fields:
       - theme_id
+    extractor: 'function(x) x$theme_id'
+    varname: theme_id
     level: '@octavo_level'
-    group_by: theme_id
+    snippets: false
     params:
       - name: octavo_query
         description: 'Query'
@@ -558,6 +563,21 @@ visualizations:
         description: 'Parish'
         widget: selectizeInput
         choices_query: places
+  wordcloud_octavo:
+    type: wordcloud
+    description: 'wordcloud: Octavo query'
+    source: octavo
+    query: '@octavo_query'
+    level: VERSE
+    fields:
+    snippets: true
+    extractor: 'function(x) lapply(x$snippets, function(y) lapply(y$matches, function(z) z$terms))'
+    varname: word
+    params:
+      - name: octavo_query
+        description: 'Query'
+        widget: textAreaInput
+        rows: 5
 visualization_types:
   map:
     params:
@@ -616,3 +636,4 @@ visualization_types:
         choices: [ treemap, sunburst ]
         default: treemap
   barplot:
+  wordcloud:

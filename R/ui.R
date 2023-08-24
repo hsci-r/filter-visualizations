@@ -195,6 +195,12 @@ ui <- function(request) {
                   resizeScript('plot')
                 )
               ),
+              conditionalPanel('input.vis.startsWith("wordcloud_")',
+                tagList(
+                  wordcloud2Output('wordcloud', width="100%", height="100%"),
+                  resizeScript('wordcloud')
+                )
+              ),
               conditionalPanel('input.vis.startsWith("tree_")',
                 tagList(
                   plotlyOutput('tree'),

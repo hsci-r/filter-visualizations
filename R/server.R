@@ -6,6 +6,7 @@ library(sf)
 library(stringi)
 library(tidyr)
 library(yaml)
+library(wordcloud2)
 
 tree.colors <- rbind(
   c('#4169E1', '#5D7FE5', '#7A96EA', '#96ACEE'),
@@ -85,28 +86,29 @@ make_url <- function(input, params) {
   )
 }
 
-query_octavo <- function(endpoint, query, level, fields, grouping.var, limit=20, offset=0) {
+query_octavo <- function(endpoint, query, level, fields, extractor, varname, snippets, limit=20, offset=0) {
   URL <- paste0(
     endpoint,
     'search??pretty&endpoint=',
     URLencode(endpoint, reserved=T),
     '&fieldEnricher=&offsetDataConverter=&query=',
     URLencode(query, reserved=T),
-    paste0('&field=', fields, collapse=''),
+    ifelse(length(fields) > 0, paste0('&field=', fields, collapse=''), ""),
     '&offset=', offset, '&limit=', limit,
     '&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0',
-    '&level=', level, '&sort=score&sortDirection=D')
+    '&level=', level, '&sort=score&sortDirection=D',
+    ifelse(snippets, '&snippetLimit=20', ''))
   # did you know: JSON is also YAML
   r <- yaml.load(getURL(URL, .encoding='UTF-8')) 
-  x <- unlist(lapply(r$result$docs, function(d) d[[grouping.var]]))
+  x <- unlist(lapply(r$result$docs, eval(parse(text=extractor))))
   # for place names: "Parish, County" -> "Parish"
-  if (grouping.var == 'place_name') {
+  if (varname == 'place_name') {
     x <- stri_replace_all_regex(x, ', .*', '')
   }
   df <- data.frame(x = x) %>%
     group_by(x) %>%
     summarize(y = n())
-  names(df) <- c(grouping.var, 'y')
+  names(df) <- c(varname, 'y')
   df
 }
 
@@ -235,7 +237,7 @@ server <- function(input, output, session) {
       'sql' = query_db(q),
       'url' = get_csv_from_url(q, v$group_by),
       'octavo' = query_octavo(config$global$octavo_endpoint, q,
-                              lvl, v$fields, v$group_by, limit=-1)
+                              lvl, v$fields, v$extractor, v$varname, v$snippets, limit=-1)
     )
     t2 <- Sys.time()
     if (nchar(Sys.getenv('ENABLE_LOGGING_TO_DB')) > 0) {
@@ -334,6 +336,10 @@ server <- function(input, output, session) {
                                  input$timeline__max, input$timeline__by)
     )
   }) %>% bindEvent(input$refresh, ignoreNULL=T)
+  output$wordcloud <- renderWordcloud2({
+    wordcloud2(get_data())
+  })
+
   output$dt <- DT::renderDataTable(get_data())
   output$link <- renderUI({
     params <- config$visualizations[[input$vis]]$params
