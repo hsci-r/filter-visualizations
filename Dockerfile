@@ -27,7 +27,8 @@ RUN install2.r --error \
   tmaptools \
   xml2 \
   plotly \
-  pacman
+  pacman \
+  wordcloud2
 
 COPY app.R /srv/shiny-server/
 COPY config.yaml /srv/shiny-server/
