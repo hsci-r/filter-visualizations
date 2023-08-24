@@ -637,3 +637,13 @@ visualization_types:
         default: treemap
   barplot:
   wordcloud:
+    params:
+      - name: min_freq
+        description: Min. frequency
+        widget: numericInput
+        default: 10
+      - name: scale
+        description: Scale
+        widget: numericInput
+        default: 1
+        step: 0.1

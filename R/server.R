@@ -337,7 +337,10 @@ server <- function(input, output, session) {
     )
   }) %>% bindEvent(input$refresh, ignoreNULL=T)
   output$wordcloud <- renderWordcloud2({
-    wordcloud2(get_data())
+    wordcloud2(get_data() %>%
+      filter(y >= input$wordcloud__min_freq) %>%
+      mutate(y = as.integer(exp(input$wordcloud__scale*log(y))))
+    )
   })
 
   output$dt <- DT::renderDataTable(get_data())
