@@ -50,6 +50,9 @@ query_db <- function(q) {
 
 write_log_to_db <- function(url, rtime, user_agent) {
   con <- connect_to_db()
+  if (nchar(url) > 2000) {
+    url <- paste0(substr(url, 1, 1997), '...')
+  }
   dbAppendTable(con, 'visualizations_log',
                 data.frame(url=url, rtime=as.double(rtime), user_agent=user_agent))
   dbDisconnect(con)
