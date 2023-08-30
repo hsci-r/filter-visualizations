@@ -534,6 +534,19 @@ visualizations:
         description: 'Query'
         widget: textAreaInput
         rows: 5
+  tree_custom_csv:
+    type: tree
+    description: 'tree: Custom CSV'
+    source: csv
+    helptext: 'The CSV should contain at least the following columns:
+               `type_id` for original type id (`types.type_orig_id` in the DB)
+               and `y` for the value to display. A header is obligatory.'
+    query: '@csv'
+    params:
+      - name: csv
+        description: 'Paste CSV here'
+        widget: textAreaInput
+        rows: 5
   plot_top_collectors:
     type: barplot
     description: 'plot: Top collectors'
