@@ -66,21 +66,24 @@ visualizations:
     description: 'map: Number of poems by type'
     source: sql
     query: 'SELECT pol_pl.pol_id, pol.name,
-                   count(DISTINCT p_pl.p_id)
-                   / IF(@relative AND ps.npoems > 0, ps.npoems, 1) AS y
-            FROM p_typ pt
-              JOIN types t1 ON pt.t_id = t1.t_id
-              LEFT JOIN types t2 ON t1.par_id = t2.t_id
-              LEFT JOIN types t3 ON t2.par_id = t3.t_id
-              LEFT JOIN types t4 ON t3.par_id = t4.t_id
-              JOIN p_pl ON pt.p_id = p_pl.p_id
-              LEFT JOIN place_stats ps ON ps.pl_id = p_pl.pl_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+                   SUM(t.n)
+                   / IF(@relative AND SUM(t.npoems) > 0, SUM(t.npoems), 1) AS y
+            FROM
+              (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n, ps.npoems
+               FROM p_typ pt
+                 JOIN types t1 ON pt.t_id = t1.t_id
+                 LEFT JOIN types t2 ON t1.par_id = t2.t_id
+                 LEFT JOIN types t3 ON t2.par_id = t3.t_id
+                 LEFT JOIN types t4 ON t3.par_id = t4.t_id
+                 JOIN p_pl ON pt.p_id = p_pl.p_id
+                 LEFT JOIN place_stats ps ON ps.pl_id = p_pl.pl_id
+               WHERE t1.type_orig_id = "@type_id"
+                     OR t2.type_orig_id = "@type_id"
+                     OR t3.type_orig_id = "@type_id"
+                     OR t4.type_orig_id = "@type_id"
+               GROUP BY p_pl.pl_id) t
+              JOIN pol_pl ON t.pl_id = pol_pl.pl_id
               JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE t1.type_orig_id = "@type_id"
-                  OR t2.type_orig_id = "@type_id"
-                  OR t3.type_orig_id = "@type_id"
-                  OR t4.type_orig_id = "@type_id"
             GROUP BY pol_pl.pol_id;'
     params:
       - name: type_id
