@@ -516,9 +516,9 @@ visualizations:
     source: octavo
     query: '@octavo_query'
     fields:
-      - theme_id
-    extractor: 'function(x) x$theme_id'
-    varname: theme_id
+      - type_id
+    extractor: 'function(x) x$type_id'
+    varname: type_id
     level: '@octavo_level'
     snippets: false
     params:
