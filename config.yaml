@@ -171,15 +171,23 @@ visualizations:
     type: map
     description: 'map: Word relative frequency'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*)/sum(pls.nwords) AS y
-            FROM words w
-              JOIN word_occ wo ON w.w_id = wo.w_id
-              JOIN verse_poem vp ON wo.v_id = vp.v_id
-              JOIN p_pl ON vp.p_id = p_pl.p_id
-              JOIN place_stats pls ON p_pl.pl_id = pls.pl_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+    query: 'SELECT pol_pl.pol_id, pol.name, SUM(n) as n, sum(pls.nwords) as n_total,
+                   SUM(n)/sum(pls.nwords) AS y
+            FROM (
+                SELECT
+                  p_pl.pl_id, COUNT(*) AS n
+                FROM
+                  words w
+                  JOIN word_occ wo ON w.w_id = wo.w_id
+                  JOIN verse_poem vp ON wo.v_id = vp.v_id
+                  JOIN p_pl ON vp.p_id = p_pl.p_id
+                WHERE w.text @operator "@word"
+                GROUP BY p_pl.pl_id
+              ) t
+              JOIN place_stats pls ON t.pl_id = pls.pl_id
+              JOIN pol_pl ON t.pl_id = pol_pl.pl_id
               JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE w.text @operator "@word" AND pls.nwords > 0
+            WHERE pls.nwords > 0
             GROUP BY pol_pl.pol_id;'
     params:
       - name: word
