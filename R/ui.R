@@ -209,6 +209,7 @@ ui <- function(request) {
               )
             ),
             tabPanel('Data', DT::dataTableOutput('dt')),
+            tabPanel('Query', verbatimTextOutput('query')),
             type = 'tabs'
           )
         )

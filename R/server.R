@@ -226,11 +226,17 @@ server <- function(input, output, session) {
   place.poly <- read_place.poly()
   
   # data
+  make_query <- reactive({
+    v <- config$visualizations[[input$vis]]
+    insert_params(v$query, input, v$params, prefix=paste0(input$vis, '__'))
+  }) %>%
+    bindEvent(input$refresh, ignoreNULL=T)
+
   get_data <- reactive({
     req(input$vis)
     t1 <- Sys.time()
     v <- config$visualizations[[input$vis]]
-    q <- insert_params(v$query, input, v$params, prefix=paste0(input$vis, '__'))
+    q <- make_query()
     url <- make_url(input, v$params)
     if (v$source == "octavo") {
       lvl <- insert_params(v$level, input, v$params, prefix=paste0(input$vis, '__'))
@@ -347,6 +353,7 @@ server <- function(input, output, session) {
   })
 
   output$dt <- DT::renderDataTable(get_data())
+  output$query <- renderText(make_query())
   output$link <- renderUI({
     params <- config$visualizations[[input$vis]]$params
     url <- make_url(input, params)
