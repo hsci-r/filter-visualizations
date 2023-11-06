@@ -125,6 +125,7 @@ ui <- function(request) {
       sb_vis_widgets_lst[[n]]$name <- n
     }
     if (!interactive) {
+      # fill in the query parameter values with the values supplied in the URL
       if (length(sb_vis_widgets_lst[[qp$vis]]$params) > 0) {
         for (i in 1:(length(sb_vis_widgets_lst[[qp$vis]]$params))) {
           sb_vis_widgets_lst[[qp$vis]]$params[[i]]$value <-
@@ -137,6 +138,18 @@ ui <- function(request) {
     sb_vistype_widgets_lst <- config$visualization_types
     for (n in names(sb_vistype_widgets_lst)) {
       sb_vistype_widgets_lst[[n]]$name <- n
+    }
+    if (!interactive) {
+      # fill in the visualization parameter values with the values supplied in the URL
+      vistype <- config$visualizations[[qp$vis]]$type
+      if (length(sb_vistype_widgets_lst[[vistype]]$params) > 0) {
+        for (i in 1:(length(sb_vistype_widgets_lst[[vistype]]$params))) {
+          if (sb_vistype_widgets_lst[[vistype]]$params[[i]]$name %in% names(qp)) {
+            sb_vistype_widgets_lst[[vistype]]$params[[i]]$value <-
+              qp[[sb_vistype_widgets_lst[[vistype]]$params[[i]]$name]]
+          }
+        }
+      }
     }
     names(sb_vistype_widgets_lst) <- NULL
 

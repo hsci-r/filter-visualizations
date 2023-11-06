@@ -72,15 +72,22 @@ get_csv_from_url <- function(url, grouping.var) {
   df
 }
 
-make_url <- function(input, params) {
+# FIXME this is clumsy -- rewrite so that the data and visualization params
+# are combined earlier
+make_url <- function(input, params, vistype, visparams) {
   paste0(
     '/?',
     paste(
-      c('vis', sapply(params, function(x) x$name)),
+      c('vis', sapply(params, function(x) x$name), sapply(visparams, function(x) x$name)),
       c(input$vis,
         sapply(params,
                function(x) URLencode(
                    as.character(input[[paste0(input$vis, '__', x$name)]]),
+                   reserved=T)
+        ),
+        sapply(visparams,
+               function(x) URLencode(
+                   as.character(input[[paste0(vistype, '__', x$name)]]),
                    reserved=T)
         )
       ),
@@ -237,7 +244,7 @@ server <- function(input, output, session) {
     t1 <- Sys.time()
     v <- config$visualizations[[input$vis]]
     q <- make_query()
-    url <- make_url(input, v$params)
+    url <- make_url(input, v$params, v$type, config$visualization_types[[v$type]]$params)
     if (v$source == "octavo") {
       lvl <- insert_params(v$level, input, v$params, prefix=paste0(input$vis, '__'))
     }
@@ -355,8 +362,8 @@ server <- function(input, output, session) {
   output$dt <- DT::renderDataTable(get_data())
   output$query <- renderText(make_query())
   output$link <- renderUI({
-    params <- config$visualizations[[input$vis]]$params
-    url <- make_url(input, params)
+    v <- config$visualizations[[input$vis]]
+    url <- make_url(input, v$params, v$type, config$visualization_types[[v$type]]$params)
     tags$a(href=url, 'permalink')
   }) %>%
     bindEvent(input$refresh, ignoreNULL=T)
