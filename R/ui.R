@@ -40,6 +40,9 @@ make_input <- function(x, prefix='') {
     'checkboxInput' = checkboxInput(inputId = name, label = x$description,
                                     value = ifelse(is.null(x$value),
                                                    FALSE, as.logical(x$value))),
+    'checkboxGroupInput' = checkboxGroupInput(
+        inputId = name, label = x$description, choices = x$choices,
+        selected = getvalue(x), inline=x$inline),
     'numericInput' = numericInput(inputId = name, label = x$description,
                                   value = getvalue(x),
                                   step = ifelse('step' %in% names(x), x$step, 1)),

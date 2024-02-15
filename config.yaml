@@ -24,7 +24,15 @@ visualizations:
               JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
               JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE pls.npoems > 0
+              AND pls.collection IN ({{{ collection }}})
             GROUP BY pol_pl.pol_id;'
+    params:
+      - name: collection
+        description: 'Collection'
+        widget: checkboxGroupInput
+        choices: { skvr: '"skvr"', erab: '"erab"', jr: '"jr"', literary: '"literary"' }
+        default: ['"skvr"', '"erab"', '"jr"']
+        inline: true
   map_nverses:
     type: map
     description: 'map: Number of verses'
@@ -34,7 +42,15 @@ visualizations:
               JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
               JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE pls.nverses > 0
+              AND pls.collection IN ({{{ collection }}})
             GROUP BY pol_pl.pol_id;'
+    params:
+      - name: collection
+        description: 'Collection'
+        widget: checkboxGroupInput
+        choices: { skvr: '"skvr"', erab: '"erab"', jr: '"jr"', literary: '"literary"' }
+        default: ['"skvr"', '"erab"', '"jr"']
+        inline: true
   map_nwords:
     type: map
     description: 'map: Number of words'
@@ -44,7 +60,15 @@ visualizations:
               JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
               JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
             WHERE pls.nwords > 0
+              AND pls.collection IN ({{{ collection }}})
             GROUP BY pol_pl.pol_id;'
+    params:
+      - name: collection
+        description: 'Collection'
+        widget: checkboxGroupInput
+        choices: { skvr: '"skvr"', erab: '"erab"', jr: '"jr"', literary: '"literary"' }
+        default: ['"skvr"', '"erab"', '"jr"']
+        inline: true
   map_ntypes:
     type: map
     description: 'map: Number of types'
@@ -69,18 +93,19 @@ visualizations:
                    SUM(t.n)
                    / IF({{{relative}}} AND SUM(t.npoems) > 0, SUM(t.npoems), 1) AS y
             FROM
-              (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n, ps.npoems
+              (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n, SUM(pls.npoems) AS npoems
                FROM p_typ pt
                  JOIN types t1 ON pt.t_id = t1.t_id
                  LEFT JOIN types t2 ON t1.par_id = t2.t_id
                  LEFT JOIN types t3 ON t2.par_id = t3.t_id
                  LEFT JOIN types t4 ON t3.par_id = t4.t_id
                  JOIN p_pl ON pt.p_id = p_pl.p_id
-                 LEFT JOIN place_stats ps ON ps.pl_id = p_pl.pl_id
-               WHERE t1.type_orig_id = "{{{type_id}}}"
-                     OR t2.type_orig_id = "{{{type_id}}}"
-                     OR t3.type_orig_id = "{{{type_id}}}"
-                     OR t4.type_orig_id = "{{{type_id}}}"
+                 LEFT JOIN place_stats pls ON pls.pl_id = p_pl.pl_id
+               WHERE (t1.type_orig_id = "{{{type_id}}}"
+                      OR t2.type_orig_id = "{{{type_id}}}"
+                      OR t3.type_orig_id = "{{{type_id}}}"
+                      OR t4.type_orig_id = "{{{type_id}}}")
+                     AND pls.collection IN ({{{ collection }}})
                GROUP BY p_pl.pl_id) t
               JOIN pol_pl ON t.pl_id = pol_pl.pl_id
               JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
@@ -93,6 +118,12 @@ visualizations:
       - name: relative
         description: 'Show relative amounts'
         widget: checkboxInput
+      - name: collection
+        description: 'Collection'
+        widget: checkboxGroupInput
+        choices: { skvr: '"skvr"', erab: '"erab"', jr: '"jr"', literary: '"literary"' }
+        default: ['"skvr"', '"erab"']
+        inline: true
   map_volume:
     type: map
     description: 'map: Number of poems by SKVR volume'
