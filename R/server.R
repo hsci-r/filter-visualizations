@@ -6,6 +6,7 @@ library(sf)
 library(stringi)
 library(tidyr)
 library(yaml)
+library(whisker)
 library(wordcloud2)
 
 tree.colors <- rbind(
@@ -190,19 +191,14 @@ read_types <- function() {
   types
 }
 
-insert_params <- function(string, input, params, prefix='') {
-  ifelse(
-    is.null(params),
-    string,
-    stri_replace_all_regex(
-      string,
-      paste0('@', sapply(params, function(x) x$name)),
-      sapply(params, function(x) stri_replace_all_regex(
-                                     input[[paste0(prefix, x$name)]],
-                                     '\\$', '\\\\\\$')),
-      vectorize_all=F
-    )
-  )
+# Gets the parameter values from input.
+# - `params` are a list of parameter specifications from the YAML config,
+# - `input` are the input values from the user interface.
+# Returns a list of the form: list(parameter_name = value)
+get_params <- function(params, input) {
+  setNames(
+    lapply(params, function(x) input[[paste0(input$vis, '__', x$name)]]), 
+    sapply(params, function(x) x$name))
 }
 
 plot_timeline <- function(df, min, max, by) {
@@ -235,7 +231,7 @@ server <- function(input, output, session) {
   # data
   make_query <- reactive({
     v <- config$visualizations[[input$vis]]
-    insert_params(v$query, input, v$params, prefix=paste0(input$vis, '__'))
+    whisker.render(v$query, get_params(v$params, input))
   }) %>%
     bindEvent(input$refresh, ignoreNULL=T)
 
@@ -246,7 +242,7 @@ server <- function(input, output, session) {
     q <- make_query()
     url <- make_url(input, v$params, v$type, config$visualization_types[[v$type]]$params)
     if (v$source == "octavo") {
-      lvl <- insert_params(v$level, input, v$params, prefix=paste0(input$vis, '__'))
+      lvl <- whisker.render(v$level, get_params(v$params, input))
     }
     data <- switch(v$source,
       'csv' = read.csv(text = q),

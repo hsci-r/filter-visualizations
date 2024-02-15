@@ -28,6 +28,7 @@ RUN install2.r --error \
   xml2 \
   plotly \
   pacman \
+  whisker \
   wordcloud2
 
 COPY app.R /srv/shiny-server/
