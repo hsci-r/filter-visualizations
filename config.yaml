@@ -83,7 +83,9 @@ visualizations:
         JOIN p_pl ON pt.p_id = p_pl.p_id
         JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-      WHERE ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+      {{^incl_erab_orig}}
+      WHERE t.type_orig_id NOT LIKE "erab_orig%"
+      {{/incl_erab_orig}}
       GROUP BY pol_pl.pol_id;
     params:
       - name: incl_erab_orig
@@ -95,8 +97,7 @@ visualizations:
     source: sql
     query: |
       SELECT pol_pl.pol_id, pol.name,
-             SUM(t.n)
-             / IF({{{relative}}} AND SUM(pls.npoems) > 0, SUM(pls.npoems), 1) AS y
+             SUM(t.n){{#relative}} / IF(SUM(pls.npoems) > 0, SUM(pls.npoems), 1){{/relative}} AS y
       FROM
         (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n
          FROM p_typ pt
@@ -110,12 +111,14 @@ visualizations:
                 OR t3.type_orig_id = "{{{type_id}}}"
                 OR t4.type_orig_id = "{{{type_id}}}")
          GROUP BY p_pl.pl_id) t
+        {{#relative}}
         JOIN (
           SELECT pl_id, SUM(npoems) AS npoems
           FROM place_stats
           WHERE collection IN ({{{ collection }}})
           GROUP BY pl_id
         ) pls ON pls.pl_id = t.pl_id
+        {{/relative}}
         JOIN pol_pl ON t.pl_id = pol_pl.pl_id
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
       GROUP BY pol_pl.pol_id;
@@ -416,7 +419,9 @@ visualizations:
         JOIN p_col pc ON pt.p_id = pc.p_id
         JOIN collectors c ON pc.col_id = c.col_id
       WHERE c.name = "{{{collector}}}"
-            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+            {{^incl_erab_orig}}
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            {{/incl_erab_orig}}
             AND t.type_orig_id NOT LIKE "kt_%"
       GROUP BY t.t_id;
     params:
@@ -439,7 +444,9 @@ visualizations:
         JOIN p_pl ON pt.p_id = p_pl.p_id
         JOIN places pl ON p_pl.pl_id = pl.pl_id
       WHERE pl.name = "{{{parish_name}}}"
-            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+            {{^incl_erab_orig}}
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            {{/incl_erab_orig}}
             AND t.type_orig_id NOT LIKE "kt_%"
       GROUP BY t.t_id;
     params:
@@ -462,7 +469,9 @@ visualizations:
         JOIN types t ON pt.t_id = t.t_id
       WHERE p_year.year BETWEEN {{{min}}} AND {{{max}}}
             AND p.collection = "{{{collection}}}"
-            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+            {{^incl_erab_orig}}
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            {{/incl_erab_orig}}
       GROUP BY t.t_id;
     params:
       - name: min
@@ -510,7 +519,9 @@ visualizations:
         JOIN p_typ pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
         JOIN types t2 ON pt2.t_id = t2.t_id
       WHERE t2.type_orig_id = "{{{type_id}}}"
-            AND ({{{incl_erab_orig}}} OR t1.type_orig_id NOT LIKE "erab_orig%")
+            {{^incl_erab_orig}}
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            {{/incl_erab_orig}}
       GROUP BY t1.t_id;
     params:
       - name: type_id
@@ -538,7 +549,9 @@ visualizations:
         JOIN p_typ pt2 ON vp2.p_id = pt2.p_id
         JOIN types t ON pt2.t_id = t.t_id
       WHERE p.nro = "{{{nro}}}" AND vp.pos = {{{pos}}}
-            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+            {{^incl_erab_orig}}
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            {{/incl_erab_orig}}
       GROUP BY t.t_id;
     params:
       - name: clustering
@@ -566,7 +579,9 @@ visualizations:
         JOIN p_typ pt ON pt.p_id = pc2.p_id
         JOIN types t ON t.t_id = pt.t_id
       WHERE p.nro = "{{{nro}}}"
-            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+            {{^incl_erab_orig}}
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            {{/incl_erab_orig}}
       GROUP BY t.t_id;
     params:
       - name: nro
