@@ -529,7 +529,7 @@ visualizations:
         JOIN types t2 ON pt2.t_id = t2.t_id
       WHERE t2.type_orig_id = "{{{type_id}}}"
             {{^incl_erab_orig}}
-            AND t.type_orig_id NOT LIKE "erab_orig%"
+            AND t1.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
       GROUP BY t1.t_id;
     params:
