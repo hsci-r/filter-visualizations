@@ -19,13 +19,14 @@ visualizations:
     type: map
     description: 'map: Number of poems'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, SUM(pls.npoems) AS y
-            FROM place_stats pls
-              JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE pls.npoems > 0
-              AND pls.collection IN ({{{ collection }}})
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, SUM(pls.npoems) AS y
+      FROM place_stats pls
+        JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE pls.npoems > 0
+        AND pls.collection IN ({{{ collection }}})
+      GROUP BY pol_pl.pol_id;
     params:
       - name: collection
         description: 'Collection'
@@ -37,13 +38,14 @@ visualizations:
     type: map
     description: 'map: Number of verses'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, SUM(pls.nverses) AS y
-            FROM place_stats pls
-              JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE pls.nverses > 0
-              AND pls.collection IN ({{{ collection }}})
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, SUM(pls.nverses) AS y
+      FROM place_stats pls
+        JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE pls.nverses > 0
+        AND pls.collection IN ({{{ collection }}})
+      GROUP BY pol_pl.pol_id;
     params:
       - name: collection
         description: 'Collection'
@@ -55,13 +57,14 @@ visualizations:
     type: map
     description: 'map: Number of words'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, SUM(pls.nwords) AS y
-            FROM place_stats pls
-              JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE pls.nwords > 0
-              AND pls.collection IN ({{{ collection }}})
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, SUM(pls.nwords) AS y
+      FROM place_stats pls
+        JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE pls.nwords > 0
+        AND pls.collection IN ({{{ collection }}})
+      GROUP BY pol_pl.pol_id;
     params:
       - name: collection
         description: 'Collection'
@@ -73,14 +76,15 @@ visualizations:
     type: map
     description: 'map: Number of types'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, COUNT(DISTINCT pt.t_id) AS y
-            FROM p_typ pt
-              JOIN types t ON pt.t_id = t.t_id
-              JOIN p_pl ON pt.p_id = p_pl.p_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, COUNT(DISTINCT pt.t_id) AS y
+      FROM p_typ pt
+        JOIN types t ON pt.t_id = t.t_id
+        JOIN p_pl ON pt.p_id = p_pl.p_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+      GROUP BY pol_pl.pol_id;
     params:
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
@@ -89,31 +93,32 @@ visualizations:
     type: map
     description: 'map: Number of poems by type'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name,
-                   SUM(t.n)
-                   / IF({{{relative}}} AND SUM(pls.npoems) > 0, SUM(pls.npoems), 1) AS y
-            FROM
-              (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n
-               FROM p_typ pt
-                 JOIN types t1 ON pt.t_id = t1.t_id
-                 LEFT JOIN types t2 ON t1.par_id = t2.t_id
-                 LEFT JOIN types t3 ON t2.par_id = t3.t_id
-                 LEFT JOIN types t4 ON t3.par_id = t4.t_id
-                 JOIN p_pl ON pt.p_id = p_pl.p_id
-               WHERE (t1.type_orig_id = "{{{type_id}}}"
-                      OR t2.type_orig_id = "{{{type_id}}}"
-                      OR t3.type_orig_id = "{{{type_id}}}"
-                      OR t4.type_orig_id = "{{{type_id}}}")
-               GROUP BY p_pl.pl_id) t
-              JOIN (
-                SELECT pl_id, SUM(npoems) AS npoems
-                FROM place_stats
-                WHERE collection IN ({{{ collection }}})
-                GROUP BY pl_id
-              ) pls ON pls.pl_id = t.pl_id
-              JOIN pol_pl ON t.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name,
+             SUM(t.n)
+             / IF({{{relative}}} AND SUM(pls.npoems) > 0, SUM(pls.npoems), 1) AS y
+      FROM
+        (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n
+         FROM p_typ pt
+           JOIN types t1 ON pt.t_id = t1.t_id
+           LEFT JOIN types t2 ON t1.par_id = t2.t_id
+           LEFT JOIN types t3 ON t2.par_id = t3.t_id
+           LEFT JOIN types t4 ON t3.par_id = t4.t_id
+           JOIN p_pl ON pt.p_id = p_pl.p_id
+         WHERE (t1.type_orig_id = "{{{type_id}}}"
+                OR t2.type_orig_id = "{{{type_id}}}"
+                OR t3.type_orig_id = "{{{type_id}}}"
+                OR t4.type_orig_id = "{{{type_id}}}")
+         GROUP BY p_pl.pl_id) t
+        JOIN (
+          SELECT pl_id, SUM(npoems) AS npoems
+          FROM place_stats
+          WHERE collection IN ({{{ collection }}})
+          GROUP BY pl_id
+        ) pls ON pls.pl_id = t.pl_id
+        JOIN pol_pl ON t.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      GROUP BY pol_pl.pol_id;
     params:
       - name: type_id
         description: 'Type ID'
@@ -132,14 +137,15 @@ visualizations:
     type: map
     description: 'map: Number of poems by SKVR volume'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
-            FROM poems p
-              JOIN raw_meta rm ON p.p_id = rm.p_id AND rm.field = "OSA"
-              JOIN p_pl ON p.p_id = p_pl.p_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE p.nro LIKE "skvr%" AND rm.value = "{{{volume}}}"
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, count(*) AS y
+      FROM poems p
+        JOIN raw_meta rm ON p.p_id = rm.p_id AND rm.field = "OSA"
+        JOIN p_pl ON p.p_id = p_pl.p_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE p.nro LIKE "skvr%" AND rm.value = "{{{volume}}}"
+      GROUP BY pol_pl.pol_id;
     params:
       - name: volume
         description: 'Volume'
@@ -149,13 +155,14 @@ visualizations:
     type: map
     description: 'map: Number of poems by collector'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
-            FROM p_col
-              JOIN collectors c ON p_col.col_id = c.col_id
-              JOIN p_pl ON p_col.p_id = p_pl.p_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE c.name = "{{{collector}}}" GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, count(*) AS y
+      FROM p_col
+        JOIN collectors c ON p_col.col_id = c.col_id
+        JOIN p_pl ON p_col.p_id = p_pl.p_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE c.name = "{{{collector}}}" GROUP BY pol_pl.pol_id;
     params:
       - name: collector
         description: 'Collector name'
@@ -165,13 +172,14 @@ visualizations:
     type: map
     description: 'map: Number of poems in a time interval'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
-            FROM p_year
-              JOIN p_pl ON p_year.p_id = p_pl.p_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE p_year.year BETWEEN {{{min}}} AND {{{max}}}
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, count(*) AS y
+      FROM p_year
+        JOIN p_pl ON p_year.p_id = p_pl.p_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE p_year.year BETWEEN {{{min}}} AND {{{max}}}
+      GROUP BY pol_pl.pol_id;
     params:
       - name: min
         description: From year
@@ -185,15 +193,16 @@ visualizations:
     type: map
     description: 'map: Word frequency'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
-            FROM words w
-              JOIN word_occ wo ON w.w_id = wo.w_id
-              JOIN verse_poem vp ON wo.v_id = vp.v_id
-              JOIN p_pl ON vp.p_id = p_pl.p_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE w.text {{{operator}}} "{{{word}}}"
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, count(*) AS y
+      FROM words w
+        JOIN word_occ wo ON w.w_id = wo.w_id
+        JOIN verse_poem vp ON wo.v_id = vp.v_id
+        JOIN p_pl ON vp.p_id = p_pl.p_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE w.text {{{operator}}} "{{{word}}}"
+      GROUP BY pol_pl.pol_id;
     params:
       - name: word
         description: 'Word'
@@ -206,24 +215,26 @@ visualizations:
     type: map
     description: 'map: Word relative frequency'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, SUM(n) as n, sum(pls.nwords) as n_total,
-                   SUM(n)/sum(pls.nwords) AS y
-            FROM (
-                SELECT
-                  p_pl.pl_id, COUNT(*) AS n
-                FROM
-                  words w
-                  JOIN word_occ wo ON w.w_id = wo.w_id
-                  JOIN verse_poem vp ON wo.v_id = vp.v_id
-                  JOIN p_pl ON vp.p_id = p_pl.p_id
-                WHERE w.text {{{operator}}} "{{{word}}}"
-                GROUP BY p_pl.pl_id
-              ) t
-              JOIN place_stats pls ON t.pl_id = pls.pl_id
-              JOIN pol_pl ON t.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE pls.nwords > 0
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, SUM(n) as n,
+              SUM(pls.nwords) as n_total,
+              SUM(n)/sum(pls.nwords) AS y
+      FROM (
+          SELECT
+            p_pl.pl_id, COUNT(*) AS n
+          FROM
+            words w
+            JOIN word_occ wo ON w.w_id = wo.w_id
+            JOIN verse_poem vp ON wo.v_id = vp.v_id
+            JOIN p_pl ON vp.p_id = p_pl.p_id
+          WHERE w.text {{{operator}}} "{{{word}}}"
+          GROUP BY p_pl.pl_id
+        ) t
+        JOIN place_stats pls ON t.pl_id = pls.pl_id
+        JOIN pol_pl ON t.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE pls.nwords > 0
+      GROUP BY pol_pl.pol_id;
     params:
       - name: word
         description: 'Word'
@@ -236,19 +247,20 @@ visualizations:
     type: map
     description: 'map: Verse cluster'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
-            FROM verse_poem vp1
-              JOIN poems p1 ON vp1.p_id = p1.p_id
-              JOIN v_clust vc1 ON vc1.v_id = vp1.v_id
-                                  AND vc1.clustering_id = {{{clustering}}}
-              JOIN v_clust vc2 ON vc1.clust_id = vc2.clust_id
-                                  AND vc2.clustering_id = {{{clustering}}}
-              JOIN verse_poem vp2 ON vp2.v_id = vc2.v_id
-              JOIN p_pl ON p_pl.p_id = vp2.p_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE p1.nro = "{{{nro}}}" AND vp1.pos = {{{pos}}}
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, count(*) AS y
+      FROM verse_poem vp1
+        JOIN poems p1 ON vp1.p_id = p1.p_id
+        JOIN v_clust vc1 ON vc1.v_id = vp1.v_id
+                            AND vc1.clustering_id = {{{clustering}}}
+        JOIN v_clust vc2 ON vc1.clust_id = vc2.clust_id
+                            AND vc2.clustering_id = {{{clustering}}}
+        JOIN verse_poem vp2 ON vp2.v_id = vc2.v_id
+        JOIN p_pl ON p_pl.p_id = vp2.p_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE p1.nro = "{{{nro}}}" AND vp1.pos = {{{pos}}}
+      GROUP BY pol_pl.pol_id;
     params:
       - name: clustering
         description: 'Clustering'
@@ -292,15 +304,16 @@ visualizations:
     type: map
     description: 'map: Poem cluster'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
-            FROM poems p
-              JOIN p_clust pc1 ON p.p_id = pc1.p_id
-              JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
-              JOIN p_pl ON p_pl.p_id = pc2.p_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE p.nro = "{{{nro}}}"
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, count(*) AS y
+      FROM poems p
+        JOIN p_clust pc1 ON p.p_id = pc1.p_id
+        JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
+        JOIN p_pl ON p_pl.p_id = pc2.p_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE p.nro = "{{{nro}}}"
+      GROUP BY pol_pl.pol_id;
     params:
       - name: nro
         description: 'Poem ID'
@@ -309,14 +322,15 @@ visualizations:
     type: map
     description: 'map: Similar poems'
     source: sql
-    query: 'SELECT pol_pl.pol_id, pol.name, count(*) AS y
-            FROM p_sim s
-              JOIN poems p1 ON s.p1_id = p1.p_id
-              JOIN p_pl ON p_pl.p_id = s.p2_id
-              JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
-              JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-            WHERE p1.nro = "{{{nro}}}"
-            GROUP BY pol_pl.pol_id;'
+    query: |
+      SELECT pol_pl.pol_id, pol.name, count(*) AS y
+      FROM p_sim s
+        JOIN poems p1 ON s.p1_id = p1.p_id
+        JOIN p_pl ON p_pl.p_id = s.p2_id
+        JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
+        JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
+      WHERE p1.nro = "{{{nro}}}"
+      GROUP BY pol_pl.pol_id;
     params:
       - name: nro
         description: 'Poem ID'
@@ -375,14 +389,15 @@ visualizations:
     type: tree
     description: 'tree: Poems by type'
     source: sql
-    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
-            FROM
-              types t
-              JOIN p_typ pt ON pt.t_id = t.t_id
-            WHERE t.type_orig_id LIKE "{{{collection}}}_%"
-                  AND t.type_orig_id NOT LIKE "erab_orig%"
-                  AND t.type_orig_id NOT LIKE "kt_%"
-            GROUP BY t.t_id;'
+    query: |
+      SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
+      FROM
+        types t
+        JOIN p_typ pt ON pt.t_id = t.t_id
+      WHERE t.type_orig_id LIKE "{{{collection}}}_%"
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            AND t.type_orig_id NOT LIKE "kt_%"
+      GROUP BY t.t_id;
     params:
       - name: collection
         description: 'Collection'
@@ -393,16 +408,17 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for collector'
     source: sql
-    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
-            FROM
-              types t
-              JOIN p_typ pt ON pt.t_id = t.t_id
-              JOIN p_col pc ON pt.p_id = pc.p_id
-              JOIN collectors c ON pc.col_id = c.col_id
-            WHERE c.name = "{{{collector}}}"
-                  AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
-                  AND t.type_orig_id NOT LIKE "kt_%"
-            GROUP BY t.t_id;'
+    query: |
+      SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
+      FROM
+        types t
+        JOIN p_typ pt ON pt.t_id = t.t_id
+        JOIN p_col pc ON pt.p_id = pc.p_id
+        JOIN collectors c ON pc.col_id = c.col_id
+      WHERE c.name = "{{{collector}}}"
+            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+            AND t.type_orig_id NOT LIKE "kt_%"
+      GROUP BY t.t_id;
     params:
       - name: collector
         description: 'Collector name'
@@ -415,16 +431,17 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for parish'
     source: sql
-    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
-            FROM
-              types t
-              JOIN p_typ pt ON pt.t_id = t.t_id
-              JOIN p_pl ON pt.p_id = p_pl.p_id
-              JOIN places pl ON p_pl.pl_id = pl.pl_id
-            WHERE pl.name = "{{{parish_name}}}"
-                  AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
-                  AND t.type_orig_id NOT LIKE "kt_%"
-            GROUP BY t.t_id;'
+    query: |
+      SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
+      FROM
+        types t
+        JOIN p_typ pt ON pt.t_id = t.t_id
+        JOIN p_pl ON pt.p_id = p_pl.p_id
+        JOIN places pl ON p_pl.pl_id = pl.pl_id
+      WHERE pl.name = "{{{parish_name}}}"
+            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+            AND t.type_orig_id NOT LIKE "kt_%"
+      GROUP BY t.t_id;
     params:
       - name: parish_name
         description: 'Parish name'
@@ -437,15 +454,16 @@ visualizations:
     type: tree
     description: 'tree: Number of poems in a time interval'
     source: sql
-    query: 'SELECT t.type_orig_id AS type_id, t.name, count(*) AS y
-            FROM p_year
-              JOIN poems p ON p_year.p_id = p.p_id
-              JOIN p_typ pt ON p_year.p_id = pt.p_id
-              JOIN types t ON pt.t_id = t.t_id
-            WHERE p_year.year BETWEEN {{{min}}} AND {{{max}}}
-                  AND p.collection = "{{{collection}}}"
-                  AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
-            GROUP BY t.t_id;'
+    query: |
+      SELECT t.type_orig_id AS type_id, t.name, count(*) AS y
+      FROM p_year
+        JOIN poems p ON p_year.p_id = p.p_id
+        JOIN p_typ pt ON p_year.p_id = pt.p_id
+        JOIN types t ON pt.t_id = t.t_id
+      WHERE p_year.year BETWEEN {{{min}}} AND {{{max}}}
+            AND p.collection = "{{{collection}}}"
+            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+      GROUP BY t.t_id;
     params:
       - name: min
         description: From year
@@ -466,14 +484,15 @@ visualizations:
     type: tree
     description: 'tree: Poems by type for SKVR volume'
     source: sql
-    query: 'SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
-            FROM
-              types t
-              JOIN p_typ pt ON pt.t_id = t.t_id
-              JOIN poems p ON pt.p_id = p.p_id
-              JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
-            WHERE rm.value = "{{{volume}}}" AND p.collection = "skvr"
-            GROUP BY t.t_id;'
+    query: |
+      SELECT t.type_orig_id AS type_id, t.name, COUNT(*) AS y
+      FROM
+        types t
+        JOIN p_typ pt ON pt.t_id = t.t_id
+        JOIN poems p ON pt.p_id = p.p_id
+        JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
+      WHERE rm.value = "{{{volume}}}" AND p.collection = "skvr"
+      GROUP BY t.t_id;
     params:
       - name: volume
         description: 'Volume'
@@ -483,15 +502,16 @@ visualizations:
     type: tree
     description: 'tree: Co-occurring types'
     source: sql
-    query: 'SELECT t1.type_orig_id AS type_id, t1.name, COUNT(*) AS y
-            FROM
-              types t1
-              JOIN p_typ pt1 ON pt1.t_id = t1.t_id
-              JOIN p_typ pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
-              JOIN types t2 ON pt2.t_id = t2.t_id
-            WHERE t2.type_orig_id = "{{{type_id}}}"
-                  AND ({{{incl_erab_orig}}} OR t1.type_orig_id NOT LIKE "erab_orig%")
-            GROUP BY t1.t_id;'
+    query: |
+      SELECT t1.type_orig_id AS type_id, t1.name, COUNT(*) AS y
+      FROM
+        types t1
+        JOIN p_typ pt1 ON pt1.t_id = t1.t_id
+        JOIN p_typ pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
+        JOIN types t2 ON pt2.t_id = t2.t_id
+      WHERE t2.type_orig_id = "{{{type_id}}}"
+            AND ({{{incl_erab_orig}}} OR t1.type_orig_id NOT LIKE "erab_orig%")
+      GROUP BY t1.t_id;
     params:
       - name: type_id
         description: 'Type'
@@ -504,21 +524,22 @@ visualizations:
     type: tree
     description: 'tree: Verse cluster type distribution'
     source: sql
-    query: 'SELECT
-               t.type_orig_id AS type_id, t.name, COUNT(*) AS y
-            FROM
-              poems p
-              JOIN verse_poem vp ON vp.p_id = p.p_id
-              JOIN v_clust vc ON vc.v_id = vp.v_id
-                                 AND vc.clustering_id = {{{clustering}}}
-              JOIN v_clust vc2 ON vc2.clust_id = vc.clust_id
-                                  AND vc2.clustering_id = vc.clustering_id
-              JOIN verse_poem vp2 ON vc2.v_id = vp2.v_id
-              JOIN p_typ pt2 ON vp2.p_id = pt2.p_id
-              JOIN types t ON pt2.t_id = t.t_id
-            WHERE p.nro = "{{{nro}}}" AND vp.pos = {{{pos}}}
-                  AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
-            GROUP BY t.t_id;'
+    query: |
+      SELECT
+         t.type_orig_id AS type_id, t.name, COUNT(*) AS y
+      FROM
+        poems p
+        JOIN verse_poem vp ON vp.p_id = p.p_id
+        JOIN v_clust vc ON vc.v_id = vp.v_id
+                           AND vc.clustering_id = {{{clustering}}}
+        JOIN v_clust vc2 ON vc2.clust_id = vc.clust_id
+                            AND vc2.clustering_id = vc.clustering_id
+        JOIN verse_poem vp2 ON vc2.v_id = vp2.v_id
+        JOIN p_typ pt2 ON vp2.p_id = pt2.p_id
+        JOIN types t ON pt2.t_id = t.t_id
+      WHERE p.nro = "{{{nro}}}" AND vp.pos = {{{pos}}}
+            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+      GROUP BY t.t_id;
     params:
       - name: clustering
         description: 'Clustering'
@@ -537,15 +558,16 @@ visualizations:
     type: tree
     description: 'tree: Poem cluster type distribution'
     source: sql
-    query: 'SELECT t.type_orig_id AS type_id, t.name, count(*) AS y
-            FROM poems p
-              JOIN p_clust pc1 ON p.p_id = pc1.p_id
-              JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
-              JOIN p_typ pt ON pt.p_id = pc2.p_id
-              JOIN types t ON t.t_id = pt.t_id
-            WHERE p.nro = "{{{nro}}}"
-                  AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
-            GROUP BY t.t_id;'
+    query: |
+      SELECT t.type_orig_id AS type_id, t.name, count(*) AS y
+      FROM poems p
+        JOIN p_clust pc1 ON p.p_id = pc1.p_id
+        JOIN p_clust pc2 ON pc1.clust_id = pc2.clust_id
+        JOIN p_typ pt ON pt.p_id = pc2.p_id
+        JOIN types t ON t.t_id = pt.t_id
+      WHERE p.nro = "{{{nro}}}"
+            AND ({{{incl_erab_orig}}} OR t.type_orig_id NOT LIKE "erab_orig%")
+      GROUP BY t.t_id;
     params:
       - name: nro
         description: 'Poem ID'
@@ -603,12 +625,13 @@ visualizations:
     type: barplot
     description: 'plot: Top collectors'
     source: sql
-    query: 'SELECT c.name AS x, count(*) AS y
-            FROM collectors c
-              JOIN p_col ON c.col_id = p_col.col_id
-            GROUP BY c.col_id
-            ORDER BY y DESC
-            LIMIT {{{num_collectors}}};'
+    query: |
+      SELECT c.name AS x, count(*) AS y
+      FROM collectors c
+        JOIN p_col ON c.col_id = p_col.col_id
+      GROUP BY c.col_id
+      ORDER BY y DESC
+      LIMIT {{{num_collectors}}};
     params:
       - name: num_collectors
         description: 'Number of collectors to show'
@@ -617,12 +640,13 @@ visualizations:
     type: timeline
     description: 'timeline: Parish'
     source: sql
-    query: 'SELECT year AS x, COUNT(*) AS y
-            FROM p_year
-              NATURAL JOIN p_pl
-              NATURAL JOIN places
-            WHERE name = "{{{parish_name}}}"
-            GROUP BY year;'
+    query: |
+      SELECT year AS x, COUNT(*) AS y
+      FROM p_year
+        NATURAL JOIN p_pl
+        NATURAL JOIN places
+      WHERE name = "{{{parish_name}}}"
+      GROUP BY year;
     params:
       - name: parish_name
         description: 'Parish'
