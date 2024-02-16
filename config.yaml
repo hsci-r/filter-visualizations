@@ -105,7 +105,7 @@ visualizations:
                       OR t3.type_orig_id = "{{{type_id}}}"
                       OR t4.type_orig_id = "{{{type_id}}}")
                GROUP BY p_pl.pl_id) t
-              LEFT JOIN (
+              JOIN (
                 SELECT pl_id, SUM(npoems) AS npoems
                 FROM place_stats
                 WHERE collection IN ({{{ collection }}})
