@@ -178,10 +178,13 @@ visualizations:
     query: |
       SELECT pol_pl.pol_id, pol.name, count(*) AS y
       FROM p_year
+        JOIN poems p ON p_year.p_id = p.p_id
         JOIN p_pl ON p_year.p_id = p_pl.p_id
         JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-      WHERE p_year.year BETWEEN {{{min}}} AND {{{max}}}
+      WHERE
+        p_year.year BETWEEN {{{min}}} AND {{{max}}}
+        AND p.collection IN ({{{ collection }}})
       GROUP BY pol_pl.pol_id;
     params:
       - name: min
@@ -192,6 +195,12 @@ visualizations:
         description: To year
         widget: numericInput
         default: 1930
+      - name: collection
+        description: 'Collection'
+        widget: checkboxGroupInput
+        choices: { skvr: '"skvr"', erab: '"erab"', jr: '"jr"', literary: '"literary"' }
+        default: ['"skvr"', '"erab"', '"jr"']
+        inline: true
   map_word:
     type: map
     description: 'map: Word frequency'
