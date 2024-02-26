@@ -786,7 +786,7 @@ visualization_types:
         description: Palette
         widget: selectInput
         choices: [ YlOrRd, YlOrBr, YlGnBu, YlGn, Reds, Oranges, Greens, Blues,
-                   plasma, viridis, Set1, Set2, Set3, Accent ]
+                   plasma, viridis, Set1, Set2, Set3, Accent, Greys ]
         default: YlOrRd
       - name: title
         description: Title

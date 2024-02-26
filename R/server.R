@@ -287,6 +287,8 @@ server <- function(input, output, session) {
     ) + tm_polygons(col="y", id="parish_name",
                     palette=input$map__palette, style=input$map__style,
                     n = input$map__classes, breaks=breaks,
+                    colorNA=if (input$map__palette == 'Greys') { 'white' } else { NA },
+                    contrast=if (input$map__palette == 'Greys') { c(0.3, 1) } else { NA },
                     title = input$map__var, textNA="\u2014"
     ) + tm_layout(title = input$map__title,
                   legend.format = list(text.separator='\u2013'))
