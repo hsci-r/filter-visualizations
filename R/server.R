@@ -123,13 +123,29 @@ query_octavo <- function(endpoint, query, level, fields, extractor, varname, sni
   df
 }
 
-read_areas <- function() {
+read_maps <- function() {
+  # FIXME `con` should be a parameter of query_db and this function!!!
+  # (right now it unnecessarily connects and disconnects many times)
+  maps <- query_db("SELECT map_id, name FROM maps;")
   con <- connect_to_db()
-  q <- 'select pol_id, name as parish_name, lang, ST_AsBinary(geometry) as geometry from polygons;'
-  df <- st_read(con, query=q, geometry_column='geometry')
-  st_crs(df) <- 'urn:ogc:def:crs:EPSG::3857'
+  result <- lapply(
+    maps$map_id,
+    function(i) {
+        r <- st_read(con, query=paste0(
+            "SELECT ",
+            "  pol.pol_id, name AS pol_name, lang, ",
+            "  ST_AsBinary(geometry) AS geometry ",
+            "FROM polygons pol ",
+            "  JOIN map_pol ON pol.pol_id = map_pol.pol_id ",
+            "WHERE map_pol.map_id = ", i, ";"))
+        st_crs(r) <- 'urn:ogc:def:crs:EPSG::3857'
+        st_make_valid(r)
+        r
+    }
+  )
   dbDisconnect(con)
-  st_make_valid(df)
+  names(result) <- maps$name
+  result
 }
 
 read_place.poly <- function() {
@@ -224,7 +240,7 @@ plot_timeline <- function(df, min, max, by) {
 server <- function(input, output, session) {
   config <- read_yaml('config.yaml')
   tmap_options(check.and.fix=T)
-  areas <- read_areas()
+  maps <- read_maps()
   types <- read_types()
   place.poly <- read_place.poly()
   
@@ -262,7 +278,6 @@ server <- function(input, output, session) {
   # map
   tmap <- reactive({
     breaks <- sapply(unlist(stri_split_fixed(input$map__breaks, ',')), as.numeric)
-    langs <- unlist(stri_split_fixed(input$map__region, ' '))
     df <- get_data()
     if (!('pol_id' %in% names(df))) {
       # if no polygon ID -- add them based on place IDs and regroup
@@ -273,18 +288,18 @@ server <- function(input, output, session) {
           summarize(y = sum(y))
       } else {
         # if no place IDs -- match based on names as last resort
+        # FIXME place names instead of polygon names!
         df <- df %>%
-          inner_join(areas %>% select(pol_id, parish_name),
-                     by=c(place_name = 'parish_name')) %>%
+          inner_join(maps[[input$map__map]] %>% select(pol_id, pol_name),
+                     by=c(place_name = 'pol_name')) %>%
           group_by(pol_id) %>%
           summarize(y = sum(y))
       }
     }
     tm_shape(
-      areas %>%
-        filter(lang %in% langs) %>%
+      maps[[input$map__map]] %>%
         left_join(df, by='pol_id')
-    ) + tm_polygons(col="y", id="parish_name",
+    ) + tm_polygons(col="y", id="pol_name",
                     palette=input$map__palette, style=input$map__style,
                     n = input$map__classes, breaks=breaks,
                     colorNA=if (input$map__palette == 'Greys') { 'white' } else { NA },

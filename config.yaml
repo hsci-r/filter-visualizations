@@ -768,6 +768,13 @@ visualizations:
 visualization_types:
   map:
     params:
+      - name: map
+        description: Polygon set
+        choices: [ "parishes (all)", "counties (all)", "parishes (Northern)",
+                   "counties (Northern)", "parishes (Southern)",
+                   "counties (Southern)" ]
+        default: [ "parishes (all)" ]
+        widget: selectInput
       - name: style
         description: Style
         widget: selectInput
@@ -794,13 +801,6 @@ visualization_types:
       - name: var
         description: Variable name
         widget: textInput
-      - name: region
-        description: Region
-        widget: selectInput
-        choices:
-          'North and South': 'kaA su ru kaV ka in ve suI ly li x viP viE'
-          'North (Finland, Karelia, Ingria)': 'kaA su ru kaV ka in ve suI ly'
-          'South (Estonia)': 'viP viE'
   timeline:
     params:
       - name: min
