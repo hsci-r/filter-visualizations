@@ -137,8 +137,8 @@ read_maps <- function() {
             "  ST_AsBinary(geometry) AS geometry ",
             "FROM polygons pol ",
             "  JOIN map_pol ON pol.pol_id = map_pol.pol_id ",
-            "WHERE map_pol.map_id = ", i, ";"))
-        st_crs(r) <- 'urn:ogc:def:crs:EPSG::3857'
+            "WHERE map_pol.map_id = ", i, " AND geometry IS NOT NULL;"))
+        st_crs(r) <- 'urn:ogc:def:crs:EPSG::3067'
         st_make_valid(r)
         r
     }
