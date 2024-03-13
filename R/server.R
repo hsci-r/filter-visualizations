@@ -139,8 +139,8 @@ read_maps <- function() {
             "  JOIN map_pol ON pol.pol_id = map_pol.pol_id ",
             "WHERE map_pol.map_id = ", i, " AND geometry IS NOT NULL;"))
         st_crs(r) <- 'urn:ogc:def:crs:EPSG::3067'
-        st_make_valid(r)
-        r
+        r <- st_make_valid(r)
+        r[!st_is_empty(r),]
     }
   )
   dbDisconnect(con)
