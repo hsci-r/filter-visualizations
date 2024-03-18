@@ -384,11 +384,17 @@ visualizations:
         JOIN pol_pl ON p_pl.pl_id = pol_pl.pl_id
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
       WHERE p1.nro = "{{{nro}}}"
+        AND s.sim_al > {{{ min_sim }}}
       GROUP BY pol_pl.pol_id;
     params:
       - name: nro
         description: 'Poem ID'
         widget: textInput
+      - name: min_sim
+        description: 'min. similarity'
+        widget: numericInput
+        default: 0.1
+        step: 0.1
   map_octavo:
     type: map
     description: 'map: Custom Octavo query'
