@@ -96,8 +96,10 @@ visualizations:
     description: 'map: Number of poems by type'
     source: sql
     query: |
-      SELECT pol_pl.pol_id, pol.name,
-             SUM(t.n){{#relative}} / IF(SUM(pls.npoems) > 0, SUM(pls.npoems), 1){{/relative}} AS y
+      SELECT pol_pl.pol_id, pol.name, {{^relative}}SUM(t.n) AS y{{/relative}}
+             {{#relative}}
+             IF(SUM(pls.npoems) > 0, SUM(t.n) / SUM(pls.npoems), 0) AS y
+             {{/relative}}
       FROM
         (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n
          FROM p_typ pt
@@ -112,14 +114,17 @@ visualizations:
                 OR t4.type_orig_id = "{{{type_id}}}")
          GROUP BY p_pl.pl_id) t
         {{#relative}}
-        JOIN (
+        RIGHT JOIN (
           SELECT pl_id, SUM(npoems) AS npoems
           FROM place_stats
           WHERE collection IN ({{{ collection }}})
           GROUP BY pl_id
         ) pls ON pls.pl_id = t.pl_id
+        JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
         {{/relative}}
+        {{^relative}}
         JOIN pol_pl ON t.pl_id = pol_pl.pl_id
+        {{/relative}}
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
       GROUP BY pol_pl.pol_id;
     params:
