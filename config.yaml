@@ -98,6 +98,7 @@ visualizations:
     query: |
       SELECT pol_pl.pol_id, pol.name, {{^relative}}SUM(t.n) AS y{{/relative}}
              {{#relative}}
+             SUM(t.n) AS y, SUM(pls.npoems) AS n_total,
              IF(SUM(pls.npoems) > 0, SUM(t.n) / SUM(pls.npoems), 0) AS y
              {{/relative}}
       FROM
