@@ -1,8 +1,5 @@
-read_maps <- function() {
-  # FIXME `con` should be a parameter of query_db and this function!!!
-  # (right now it unnecessarily connects and disconnects many times)
-  maps <- query_db("SELECT map_id, name FROM maps;")
-  con <- connect_to_db()
+read_maps <- function(con) {
+  maps <- query_db(con, "SELECT map_id, name FROM maps;")
   result <- lapply(
     maps$map_id,
     function(i) {
@@ -18,13 +15,12 @@ read_maps <- function() {
         r[!st_is_empty(r),]
     }
   )
-  dbDisconnect(con)
   names(result) <- maps$name
   result
 }
 
-read_place.poly <- function() {
-  query_db('SELECT pol_id, place_orig_id AS place_id FROM pol_pl NATURAL JOIN places;')
+read_place.poly <- function(con) {
+  query_db(con, 'SELECT pol_id, place_orig_id AS place_id FROM pol_pl NATURAL JOIN places;')
 }
 
 make_map <- function(df, input, maps, place.poly) {

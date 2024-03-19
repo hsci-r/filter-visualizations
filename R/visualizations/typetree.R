@@ -17,8 +17,8 @@ tree.fontcolors <- c(
   'white', 'white', 'white'
 )
 
-read_types <- function() {
-  types <- query_db(paste(
+read_types <- function(con) {
+  types <- query_db(con, paste(
     'SELECT ',
     '  t1.type_orig_id AS type_id_1, t1.name AS name_1, t2.type_orig_id as parent_1, ',
     '  t2.type_orig_id AS type_id_2, t2.name AS name_2, t3.type_orig_id as parent_2, ',

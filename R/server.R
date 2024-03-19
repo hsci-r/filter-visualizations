@@ -48,11 +48,15 @@ get_params <- function(params, input) {
 }
 
 server <- function(input, output, session) {
+  # initialization: load config and necessary data from the DB
   config <- read_yaml('config.yaml')
   tmap_options(check.and.fix=T)
-  maps <- read_maps()
-  types <- read_types()
-  place.poly <- read_place.poly()
+  con <- connect_to_db()
+  maps <- read_maps(con)
+  types <- read_types(con)
+  place.poly <- read_place.poly(con)
+  chq <- lapply(config$choices_queries, function(q) query_db(con, q))
+  dbDisconnect(con)
   
   # data
   make_query <- reactive({
@@ -72,7 +76,7 @@ server <- function(input, output, session) {
     }
     data <- switch(v$source,
       'csv' = read.csv(text = q),
-      'sql' = query_db(q),
+      'sql' = connect_and_query_db(q),
       'url' = get_csv_from_url(q, v$group_by),
       'octavo' = query_octavo(config$global$octavo_endpoint, q,
                               lvl, v$fields, v$extractor, v$varname, v$snippets, limit=-1)
@@ -143,7 +147,6 @@ server <- function(input, output, session) {
   observeEvent(input$vis, toggleState('dlMapSVG', grepl('map_', input$vis)))
   observeEvent(input$vis, toggleState('dlMapPNG', grepl('map_', input$vis)))
 
-  chq <- lapply(config$choices_queries, query_db)
   observeEvent(input$vis, {
     v <- config$visualizations[[input$vis]]
     for (p in v$params) {

@@ -13,13 +13,18 @@ connect_to_db <- function() {
   con
 }
 
-query_db <- function(q) {
-  con <- connect_to_db()
+query_db <- function(con, q) {
   res <- dbSendQuery(con, q)
   data <- dbFetch(res)
   dbClearResult(res)
-  dbDisconnect(con)
   data
+}
+
+connect_and_query_db <- function(q) {
+  con <- connect_to_db()
+  result <- query_db(con, q)
+  dbDisconnect(con)
+  result
 }
 
 write_log_to_db <- function(url, rtime, user_agent) {
