@@ -98,8 +98,8 @@ visualizations:
     query: |
       SELECT pol_pl.pol_id, pol.name, {{^relative}}SUM(t.n) AS y{{/relative}}
              {{#relative}}
-             SUM(t.n) AS y, SUM(pls.npoems) AS n_total,
-             IF(SUM(pls.npoems) > 0, SUM(t.n) / SUM(pls.npoems), 0) AS y
+             SUM(t.n) AS n, SUM(IFNULL(pls.npoems, 0)) AS n_total,
+             IF(SUM(IFNULL(pls.npoems, 0)) > 0, SUM(t.n) / SUM(IFNULL(pls.npoems, 0)), 0) AS y
              {{/relative}}
       FROM
         (SELECT p_pl.pl_id, COUNT(DISTINCT p_pl.p_id) AS n
@@ -127,7 +127,8 @@ visualizations:
         JOIN pol_pl ON t.pl_id = pol_pl.pl_id
         {{/relative}}
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-      GROUP BY pol_pl.pol_id;
+      GROUP BY pol_pl.pol_id
+      HAVING y > 0;
     params:
       - name: type_id
         description: 'Type ID'
