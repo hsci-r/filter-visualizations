@@ -125,7 +125,7 @@ server <- function(input, output, session) {
   output$dlData <- downloadHandler(
     filename = function() paste0(substr(dl_filename(), 1, 50), '.csv'),
     content = function(file) {
-      write.csv(df(), file, row.names=F)
+      write.csv(get_data(), file, row.names=F)
     },
     contentType = 'text/csv'
   )
