@@ -27,7 +27,7 @@ read_place.poly <- function() {
   query_db('SELECT pol_id, place_orig_id AS place_id FROM pol_pl NATURAL JOIN places;')
 }
 
-make_map <- function(df, input, maps) {
+make_map <- function(df, input, maps, place.poly) {
     breaks <- sapply(unlist(stri_split_fixed(input$map__breaks, ',')), as.numeric)
     if (!('pol_id' %in% names(df))) {
       # if no polygon ID -- add them based on place IDs and regroup

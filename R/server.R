@@ -158,7 +158,7 @@ server <- function(input, output, session) {
     bindEvent(input$refresh, ignoreNULL=T)
 
   # output visualizations
-  tmap <- reactive(make_map(get_data(), input, maps))
+  tmap <- reactive(make_map(get_data(), input, maps, place.poly))
   output$tmap <- renderTmap(tmap())
   output$tree <- renderPlotly(make_type_tree(get_data(), input, types))
   output$plot <- renderPlot({
