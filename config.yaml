@@ -1,5 +1,3 @@
-global:
-  octavo_endpoint: https://filter-octavo.rahtiapp.fi/filter/
 choices_queries:
   collectors: 'SELECT name AS value FROM collectors;'
   places: 'SELECT IF(plp.name IS NOT NULL,
@@ -336,9 +334,10 @@ visualizations:
   map_passage:
     type: map
     description: 'map: Passage'
-    source: url
-    query: 'http://runoregi.rahtiapp.fi/passage?nro={{{nro}}}&start={{{start}}}&end={{{end}}}&clustering={{{clustering}}}&dist={{{dist}}}&hitfact={{{hitfact}}}&format=csv'
-    group_by: place
+    source: csv
+    url: 'https://runoregi.fi/passage?nro={{{nro}}}&start={{{start}}}&end={{{end}}}&clustering={{{clustering}}}&dist={{{dist}}}&hitfact={{{hitfact}}}&format=csv'
+    group_by: place_id
+    separate_by: ';'
     params:
       - name: clustering
         description: 'Clustering'
@@ -405,21 +404,16 @@ visualizations:
   map_octavo:
     type: map
     description: 'map: Custom Octavo query'
-    source: octavo
-    query: '{{{octavo_query}}}'
-    level: '{{{octavo_level}}}'
-    fields:
-      - place_id
-    group_by: place_id
-    extractor: 'function(x) x$place_id'
-    varname: place_id
-    snippets: false
+    source: json
+    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query  }}}&field=place_id&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
+    query: '[ .result.docs[].place_id[] ] | group_by(.)
+            | { "place_id": map(.[0]), "y": map(length) }'
     params:
-      - name: octavo_query
+      - name: query
         description: 'Query'
         widget: textAreaInput
         rows: 5
-      - name: octavo_level
+      - name: level
         description: 'Level'
         widget: selectInput
         choices: [ VERSE, POEM ]
@@ -446,7 +440,7 @@ visualizations:
                `place_name` to identify the place, and `y` for the value
                to display. Only using polygon IDs guarantees correct results.
                A header is obligatory.'
-    query: '{{{csv}}}'
+    content: '{{{csv}}}'
     params:
       - name: csv
         description: 'Paste CSV here'
@@ -689,20 +683,16 @@ visualizations:
   tree_octavo:
     type: tree
     description: 'tree: Custom Octavo query'
-    source: octavo
-    query: '{{{octavo_query}}}'
-    fields:
-      - type_id
-    extractor: 'function(x) x$type_id'
-    varname: type_id
-    level: '{{{octavo_level}}}'
-    snippets: false
+    source: json
+    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query }}}&field=type_id&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
+    query: '[ .result.docs[] | select(.type_id != null) | .type_id[] ] | group_by(.)
+            | { "type_id": map(.[0]), "y": map(length) }'
     params:
-      - name: octavo_query
+      - name: query
         description: 'Query'
         widget: textAreaInput
         rows: 5
-      - name: octavo_level
+      - name: level
         description: 'Level'
         widget: selectInput
         choices: [ VERSE, POEM ]
@@ -726,7 +716,7 @@ visualizations:
     helptext: 'The CSV should contain at least the following columns:
                `type_id` for original type id (`types.type_orig_id` in the DB)
                and `y` for the value to display. A header is obligatory.'
-    query: '{{{csv}}}'
+    content: '{{{csv}}}'
     params:
       - name: csv
         description: 'Paste CSV here'
@@ -766,15 +756,12 @@ visualizations:
   wordcloud_octavo:
     type: wordcloud
     description: 'wordcloud: Octavo query'
-    source: octavo
-    query: '{{{octavo_query}}}'
-    level: VERSE
-    fields:
-    snippets: true
-    extractor: 'function(x) lapply(x$snippets, function(y) lapply(y$matches, function(z) z$terms))'
-    varname: word
+    source: json
+    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query }}}&offset=0&limit=-1&snippetLimit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level=VERSE&sort=score&sortDirection=D'
+    query: '[ .result.docs[].snippets[].matches[].terms[] ] | group_by(.)
+            | { "word": map(.[0]), "y": map(length) }'
     params:
-      - name: octavo_query
+      - name: query
         description: 'Query'
         widget: textAreaInput
         rows: 5

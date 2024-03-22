@@ -3,6 +3,7 @@ FROM quay.io/hsci/shiny-verse:4.2.3
 RUN apt-get update -qq && apt-get -y --no-install-recommends install \
   libnss-wrapper \
   gettext-base \
+  libjq-dev \
   libudunits2-0 \
   libproj-dev \
   libgdal-dev \
@@ -12,6 +13,7 @@ RUN pip3 install altair
 
 RUN install2.r --error \
   DT \
+  jqr \
   ggplot2 \
   RCurl \
   RMariaDB \

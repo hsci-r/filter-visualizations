@@ -73,10 +73,6 @@ read_types <- function(con) {
 }
 
 make_type_tree <- function(df, input, types) {
-    # FIXME workaround -- in Octavo the field is still called "theme_id"
-    if ('theme_id' %in% names(df)) {
-      df <- df %>% rename(type_id = theme_id)
-    }
     # join with the type hierarchy
     df2 <- df %>%
       inner_join(types, by = c(type_id = 'type_id_1'), suffix=c('.x', ''))

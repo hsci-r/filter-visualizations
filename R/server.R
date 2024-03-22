@@ -61,6 +61,7 @@ server <- function(input, output, session) {
   # data
   make_query <- reactive({
     v <- config$visualizations[[input$vis]]
+    req(v$query)
     whisker.render(v$query, get_params(v$params, input))
   }) %>%
     bindEvent(input$refresh, ignoreNULL=T)
@@ -69,17 +70,28 @@ server <- function(input, output, session) {
     req(input$vis)
     t1 <- Sys.time()
     v <- config$visualizations[[input$vis]]
-    q <- make_query()
     url <- make_url(input, v$params, v$type, config$visualization_types[[v$type]]$params)
-    if (v$source == "octavo") {
-      lvl <- whisker.render(v$level, get_params(v$params, input))
+    if (v$source %in% c('csv', 'json')) {
+      if ('url' %in% names(v)) {
+      params_enc <- lapply(get_params(v$params, input),
+          function(x) URLencode(as.character(x)))
+      data_url <- whisker.render(v$url, params_enc)
+      content <- getURL(data_url, .encoding='UTF-8')
+      } else {
+        content <- whisker.render(v$content, get_params(v$params, input))
+      }
     }
     data <- switch(v$source,
-      'csv' = read.csv(text = q),
-      'sql' = connect_and_query_db(q),
-      'url' = get_csv_from_url(q, v$group_by),
-      'octavo' = query_octavo(config$global$octavo_endpoint, q,
-                              lvl, v$fields, v$extractor, v$varname, v$snippets, limit=-1)
+      'csv'  = { df <- read.csv(text = content)
+                 if (('group_by') %in% names(v)) {
+                   if (('separate_by') %in% names(v))
+                     df <- df %>% separate_rows(v$group_by, sep=v$separate_by)
+                   df <- df %>% group_by_at(v$group_by) %>% summarize(y = n())
+                 }
+                 df
+               },
+      'json' = data.frame(jqr::jq(content, v$query) %>% yaml.load()),
+      'sql'  = connect_and_query_db(make_query()),
     )
     t2 <- Sys.time()
     if (nchar(Sys.getenv('ENABLE_LOGGING_TO_DB')) > 0) {
