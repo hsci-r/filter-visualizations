@@ -83,9 +83,20 @@ visualizations:
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
       {{^incl_erab_orig}}
       WHERE t.type_orig_id NOT LIKE "erab_orig%"
+        {{^incl_skvr_minor}}
+          AND pt.is_minor = 0
+        {{/incl_skvr_minor}}
+      {{/incl_erab_orig}}
+      {{#incl_erab_orig}}
+      {{^incl_skvr_minor}}
+      WHERE pt.is_minor = 0
+      {{/incl_skvr_minor}}
       {{/incl_erab_orig}}
       GROUP BY pol_pl.pol_id;
     params:
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
@@ -480,6 +491,9 @@ visualizations:
             {{^incl_erab_orig}}
             AND t.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
+            {{^incl_skvr_minor}}
+            AND pt.is_minor = 0
+            {{/incl_skvr_minor}}
             AND t.type_orig_id NOT LIKE "kt_%"
       GROUP BY t.t_id;
     params:
@@ -487,6 +501,9 @@ visualizations:
         description: 'Collector name'
         widget: selectizeInput
         choices_query: collectors
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
@@ -505,6 +522,9 @@ visualizations:
             {{^incl_erab_orig}}
             AND t.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
+            {{^incl_skvr_minor}}
+            AND pt.is_minor = 0
+            {{/incl_skvr_minor}}
             AND t.type_orig_id NOT LIKE "kt_%"
       GROUP BY t.t_id;
     params:
@@ -512,6 +532,9 @@ visualizations:
         description: 'Parish name'
         widget: selectizeInput
         choices_query: places
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
@@ -530,6 +553,9 @@ visualizations:
             {{^incl_erab_orig}}
             AND t.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
+            {{^incl_skvr_minor}}
+            AND pt.is_minor = 0
+            {{/incl_skvr_minor}}
       GROUP BY t.t_id;
     params:
       - name: min
@@ -544,6 +570,9 @@ visualizations:
         description: Collection
         widget: selectInput
         choices: [ skvr, erab ]
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
@@ -559,12 +588,18 @@ visualizations:
         JOIN poems p ON pt.p_id = p.p_id
         JOIN raw_meta rm ON rm.p_id = p.p_id AND rm.field = "OSA"
       WHERE rm.value = "{{{volume}}}" AND p.collection = "skvr"
+        {{^incl_skvr_minor}}
+        AND pt.is_minor = 0
+        {{/incl_skvr_minor}}
       GROUP BY t.t_id;
     params:
       - name: volume
         description: 'Volume'
         widget: selectizeInput
         choices_query: skvr_volumes
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
   tree_types_cooc:
     type: tree
     description: 'tree: Co-occurring types'
@@ -580,12 +615,18 @@ visualizations:
             {{^incl_erab_orig}}
             AND t1.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
+            {{^incl_skvr_minor}}
+            AND pt1.is_minor = 0 AND pt2.is_minor = 0
+            {{/incl_skvr_minor}}
       GROUP BY t1.t_id;
     params:
       - name: type_id
         description: 'Type'
         widget: selectizeInput
         choices_query: types
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
@@ -642,6 +683,9 @@ visualizations:
             {{^incl_erab_orig}}
             AND t.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
+            {{^incl_skvr_minor}}
+            AND pt2.is_minor = 0
+            {{/incl_skvr_minor}}
       GROUP BY t.t_id;
     params:
       - name: clustering
@@ -654,6 +698,9 @@ visualizations:
       - name: pos
         description: 'Verse position'
         widget: numericInput
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
@@ -672,11 +719,17 @@ visualizations:
             {{^incl_erab_orig}}
             AND t.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
+            {{^incl_skvr_minor}}
+            AND pt.is_minor = 0
+            {{/incl_skvr_minor}}
       GROUP BY t.t_id;
     params:
       - name: nro
         description: 'Poem ID'
         widget: textInput
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
       - name: incl_erab_orig
         description: 'Include ERAB old type index'
         widget: checkboxInput
