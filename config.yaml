@@ -425,8 +425,8 @@ visualizations:
     type: map
     description: 'map: Custom Octavo query'
     source: json
-    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query  }}}&field=place_id&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
-    query: '[ .result.docs[].place_id[] ] | group_by(.)
+    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query  }}}&field=place_id_direct&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
+    query: '[ .result.docs[].place_id_direct[] ] | group_by(.)
             | { "place_id": map(.[0]), "y": map(length) }'
     params:
       - name: query
