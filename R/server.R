@@ -128,10 +128,14 @@ server <- function(input, output, session) {
   # download handlers
   dl_filename <- reactive({
     params <- config$visualizations[[input$vis]]$params
-    values <- sapply(params, function(x) as.character(input[[paste0(input$vis, '__', x$name)]]))
+    values <- sapply(
+      params,
+      function(x) paste0(
+        as.character(input[[paste0(input$vis, '__', x$name)]]),
+        collapse=","))
     stri_replace_all_charclass(
       paste(c(input$vis, values), collapse='_'),
-      '[*:\\p{WHITE_SPACE}]', '_'
+      '["*:\\p{WHITE_SPACE}]', '_'
     )
   })
   output$dlData <- downloadHandler(
