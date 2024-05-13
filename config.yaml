@@ -6,6 +6,9 @@ choices_queries:
                   pl.name as value
            FROM places pl
              LEFT JOIN places plp ON pl.par_id = plp.pl_id;'
+  counties: 'SELECT pl.name as label, pl.name as value
+             FROM places pl
+             WHERE type = "county";'
   types: 'SELECT CONCAT(name, " (", type_orig_id, ")") as label, type_orig_id as value
           FROM types;'
   clusterings: 'SELECT name AS label, clustering_id AS value FROM v_clusterings;'
@@ -541,6 +544,38 @@ visualizations:
         description: 'Parish name'
         widget: selectizeInput
         choices_query: places
+      - name: incl_skvr_minor
+        description: 'Include SKVR "minor" (*-marked) types'
+        widget: checkboxInput
+      - name: incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
+  tree_types_county:
+    type: tree
+    description: 'tree: Poems by type for county'
+    source: sql
+    query: |
+      SELECT t.type_orig_id AS type_id, t.name, COUNT(DISTINCT pt.p_id) AS y
+      FROM
+        places pl
+        JOIN places pl2 ON pl2.par_id = pl.pl_id
+        JOIN p_pl ON p_pl.pl_id = pl.pl_id OR p_pl.pl_id = pl2.pl_id
+        JOIN p_typ pt ON pt.p_id = p_pl.p_id
+        JOIN types t ON t.t_id = pt.t_id
+      WHERE pl.name = "{{{county_name}}}"
+            {{^incl_erab_orig}}
+            AND t.type_orig_id NOT LIKE "erab_orig%"
+            {{/incl_erab_orig}}
+            {{^incl_skvr_minor}}
+            AND pt.is_minor = 0
+            {{/incl_skvr_minor}}
+            AND t.type_orig_id NOT LIKE "kt_%"
+      GROUP BY t.t_id;
+    params:
+      - name: county_name
+        description: 'County name'
+        widget: selectizeInput
+        choices_query: counties
       - name: incl_skvr_minor
         description: 'Include SKVR "minor" (*-marked) types'
         widget: checkboxInput
