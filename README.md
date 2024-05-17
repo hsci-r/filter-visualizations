@@ -15,7 +15,7 @@ library(shiny)
 runApp('.')
 ```
 
-For deployment (e.g. on [Rahti](https://rahti.csc.fi), the `Dockerfile`
+For deployment (e.g. on [Rahti](https://rahti.csc.fi)), the `Dockerfile`
 should be used to build a Docker image.
 
 ### Runtime configuration
