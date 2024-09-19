@@ -312,11 +312,11 @@ visualizations:
           WHERE w.text {{{operator}}} "{{{word}}}"
           GROUP BY p_pl.pl_id
         ) t
-        JOIN place_stats pls ON t.pl_id = pls.pl_id
-        JOIN pol_pl ON t.pl_id = pol_pl.pl_id
+        RIGHT JOIN place_stats pls ON t.pl_id = pls.pl_id
+        JOIN pol_pl ON pls.pl_id = pol_pl.pl_id
         JOIN polygons pol ON pol_pl.pol_id = pol.pol_id
-      WHERE pls.nwords > 0
-      GROUP BY pol_pl.pol_id;
+      GROUP BY pol_pl.pol_id
+      HAVING n > 0;
     params:
       - name: word
         description: 'Word'
