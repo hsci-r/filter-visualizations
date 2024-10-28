@@ -428,7 +428,7 @@ visualizations:
     type: map
     description: 'map: Custom Octavo query'
     source: json
-    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query  }}}&field=place_id_direct&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
+    url: 'https://filter-octavo.2.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.2.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query  }}}&field=place_id_direct&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
     query: '[ .result.docs[].place_id_direct[] ] | group_by(.)
             | { "place_id": map(.[0]), "y": map(length) }'
     params:
@@ -781,7 +781,7 @@ visualizations:
     type: tree
     description: 'tree: Custom Octavo query'
     source: json
-    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query }}}&field=type_id&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
+    url: 'https://filter-octavo.2.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.2.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query }}}&field=type_id&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
     query: '[ .result.docs[] | select(.type_id != null) | .type_id[] ] | group_by(.)
             | { "type_id": map(.[0]), "y": map(length) }'
     params:
@@ -854,7 +854,7 @@ visualizations:
     type: wordcloud
     description: 'wordcloud: Octavo query'
     source: json
-    url: 'https://filter-octavo.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query }}}&offset=0&limit=-1&snippetLimit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level=VERSE&sort=score&sortDirection=D'
+    url: 'https://filter-octavo.2.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.2.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query }}}&offset=0&limit=-1&snippetLimit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level=VERSE&sort=score&sortDirection=D'
     query: '[ .result.docs[].snippets[].matches[].terms[] ] | group_by(.)
             | { "word": map(.[0]), "y": map(length) }'
     params:
