@@ -131,8 +131,14 @@ ui <- function(request) {
       # fill in the query parameter values with the values supplied in the URL
       if (length(sb_vis_widgets_lst[[qp$vis]]$params) > 0) {
         for (i in 1:(length(sb_vis_widgets_lst[[qp$vis]]$params))) {
-          sb_vis_widgets_lst[[qp$vis]]$params[[i]]$value <-
-            qp[[sb_vis_widgets_lst[[qp$vis]]$params[[i]]$name]]
+          val <- qp[[sb_vis_widgets_lst[[qp$vis]]$params[[i]]$name]]
+          if (sb_vis_widgets_lst[[qp$vis]]$params[[i]]$widget == 'checkboxGroupInput') {
+              # If the value of the widget is a vector -- parse the value from
+              # the URL by splitting it on commas. (NB: the values of the
+              # individual boxes can't contain commas!)
+              val <- unlist(stri_split_fixed(val, ","))
+          }
+          sb_vis_widgets_lst[[qp$vis]]$params[[i]]$value <- val
         }
       }
     }

@@ -13,6 +13,13 @@ source("R/visualizations/timeline.R", local=T)
 source("R/visualizations/typetree.R", local=T)
 source("R/visualizations/wordcloud.R", local=T)
 
+encode_param <- function(value) {
+  if (length(value) > 1) {
+    value <- paste0(value, collapse=",")
+  }
+  URLencode(as.character(value, reserved=T))
+}
+
 # FIXME this is clumsy -- rewrite so that the data and visualization params
 # are combined earlier
 make_url <- function(input, params, vistype, visparams) {
@@ -22,14 +29,10 @@ make_url <- function(input, params, vistype, visparams) {
       c('vis', sapply(params, function(x) x$name), sapply(visparams, function(x) x$name)),
       c(input$vis,
         sapply(params,
-               function(x) URLencode(
-                   as.character(input[[paste0(input$vis, '__', x$name)]]),
-                   reserved=T)
+               function(x) encode_param(input[[paste0(input$vis, '__', x$name)]])
         ),
         sapply(visparams,
-               function(x) URLencode(
-                   as.character(input[[paste0(vistype, '__', x$name)]]),
-                   reserved=T)
+               function(x) encode_param(input[[paste0(vistype, '__', x$name)]])
         )
       ),
       sep = '=', collapse = '&'
