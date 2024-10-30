@@ -119,6 +119,7 @@ resizeScript <- function(output) {
 
 ui <- function(request) {
     config <- read_yaml('config.yaml')
+    about_text <- paste(readLines('about.html'), collapse='\n')
     qp <- parseQueryString(request$QUERY_STRING)
     route = if (is.null(qp$route)) '' else qp$route
     interactive <- is.null(qp$vis)
@@ -232,6 +233,7 @@ ui <- function(request) {
             ),
             tabPanel('Data', DT::dataTableOutput('dt')),
             tabPanel('Query', verbatimTextOutput('query')),
+            tabPanel('About', HTML(about_text)),
             type = 'tabs'
           )
         )
