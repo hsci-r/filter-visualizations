@@ -46,8 +46,13 @@ make_map <- function(df, input, maps, place.poly) {
       maps[[input$map__map]] %>%
         left_join(df, by='pol_id')
     ) + tm_polygons(col="y", id="pol_name",
-                    palette=input$map__palette, style=input$map__style,
-                    n = input$map__classes, breaks=breaks,
+                    palette=input$map__palette,
+                    n = input$map__classes,
+                    style = input$map__style,
+                    breaks = breaks,
+                    as.count = (typeof(df$y) == 'integer'),
+                    legend.format = list(
+                      format = if(typeof(df$y) == 'integer') { "d" } else { "f" }),
                     colorNA=if (input$map__palette == 'Greys') { 'white' } else { NA },
                     contrast=if (input$map__palette == 'Greys') { c(0.3, 1) } else { NA },
                     title = input$map__var, textNA="\u2014"
