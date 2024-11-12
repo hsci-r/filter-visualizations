@@ -175,7 +175,7 @@ server <- function(input, output, session) {
     for (p in v$params) {
       if (!is.null(p$choices_query)) {
         name = paste0(input$vis, '__', p$name)
-        if (input[[name]] == '') {
+        if ((is.null(input[[name]])) || (input[[name]] == '')) {
           updateSelectizeInput(
             session, name, server=T,
             choices = c('Select...' = '', setNames(chq[[p$choices_query]]$value,

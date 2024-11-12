@@ -52,6 +52,7 @@ make_input <- function(x, prefix='') {
                                 choices=x$choices, selected=getvalue(x)),
     'selectizeInput' = selectizeInput(inputId = name, label = x$description,
                                       choices=c(x$value, x[['choices']]),
+                                      multiple=ifelse(is.null(x$multiple), FALSE, x$multiple),
                                       selected=getvalue(x)),
     'textInput' = textInput(inputId = name, label = x$description,
                             value = getvalue(x)),

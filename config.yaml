@@ -9,7 +9,7 @@ choices_queries:
   counties: 'SELECT pl.name as label, pl.name as value
              FROM places pl
              WHERE type = "county";'
-  types: 'SELECT CONCAT(name, " (", type_orig_id, ")") as label, type_orig_id as value
+  types: 'SELECT CONCAT(name, " (", type_orig_id, ")") as label, CONCAT("\"", type_orig_id, "\"") as value
           FROM types;'
   clusterings: 'SELECT name AS label, clustering_id AS value FROM v_clusterings;'
   skvr_volumes: 'SELECT DISTINCT value
@@ -121,10 +121,10 @@ visualizations:
            LEFT JOIN types t3 ON t2.par_id = t3.t_id
            LEFT JOIN types t4 ON t3.par_id = t4.t_id
            JOIN p_pl ON pt.p_id = p_pl.p_id
-         WHERE (t1.type_orig_id = "{{{type_id}}}"
-                OR t2.type_orig_id = "{{{type_id}}}"
-                OR t3.type_orig_id = "{{{type_id}}}"
-                OR t4.type_orig_id = "{{{type_id}}}")
+         WHERE (t1.type_orig_id IN ({{{type_ids}}})
+                OR t2.type_orig_id IN ({{{type_ids}}})
+                OR t3.type_orig_id IN ({{{type_ids}}})
+                OR t4.type_orig_id IN ({{{type_ids}}}))
          GROUP BY p_pl.pl_id) t
         {{#relative}}
         RIGHT JOIN (
@@ -142,10 +142,11 @@ visualizations:
       GROUP BY pol_pl.pol_id
       HAVING y > 0;
     params:
-      - name: type_id
+      - name: type_ids
         description: 'Type ID'
         widget: selectizeInput
         choices_query: types
+        multiple: true
       - name: relative
         description: 'Show relative amounts'
         widget: checkboxInput
@@ -165,13 +166,13 @@ visualizations:
         (SELECT p_typ.p_id
          FROM p_typ
            JOIN types ON p_typ.t_id = types.t_id
-         WHERE types.type_orig_id = "{{{ type_id }}}"
+         WHERE types.type_orig_id IN ({{{ type_ids }}})
          UNION
          SELECT s.p2_id AS p_id
          FROM p_sim s
            JOIN p_typ ON s.p1_id = p_typ.p_id
            JOIN types ON p_typ.t_id = types.t_id
-         WHERE types.type_orig_id = "{{{ type_id }}}"
+         WHERE types.type_orig_id IN ({{{ type_ids }}})
            AND s.sim_al > {{{ min_sim }}}
         ) t
         JOIN poems p ON t.p_id = p.p_id
@@ -182,10 +183,11 @@ visualizations:
         p.collection IN ({{{ collection }}})
       GROUP BY pol_pl.pol_id;
     params:
-      - name: type_id
+      - name: type_ids
         description: 'Type ID'
         widget: selectizeInput
         choices_query: types
+        multiple: true
       - name: collection
         description: 'Collection'
         widget: checkboxGroupInput
@@ -655,7 +657,7 @@ visualizations:
         JOIN p_typ pt1 ON pt1.t_id = t1.t_id
         JOIN p_typ pt2 ON pt1.p_id = pt2.p_id AND pt1.t_id <> pt2.t_id
         JOIN types t2 ON pt2.t_id = t2.t_id
-      WHERE t2.type_orig_id = "{{{type_id}}}"
+      WHERE t2.type_orig_id IN ({{{type_ids}}})
             {{^incl_erab_orig}}
             AND t1.type_orig_id NOT LIKE "erab_orig%"
             {{/incl_erab_orig}}
@@ -664,10 +666,11 @@ visualizations:
             {{/incl_skvr_minor}}
       GROUP BY t1.t_id;
     params:
-      - name: type_id
+      - name: type_ids
         description: 'Type'
         widget: selectizeInput
         choices_query: types
+        multiple: true
       - name: incl_skvr_minor
         description: 'Include SKVR "minor" (*-marked) types'
         widget: checkboxInput
@@ -684,23 +687,24 @@ visualizations:
         (SELECT p_typ.p_id
          FROM p_typ
            JOIN types ON p_typ.t_id = types.t_id
-         WHERE types.type_orig_id = "{{{ type_id }}}"
+         WHERE types.type_orig_id IN ({{{ type_ids }}})
          UNION
          SELECT s.p2_id AS p_id
          FROM p_sim s
            JOIN p_typ ON s.p1_id = p_typ.p_id
            JOIN types ON p_typ.t_id = types.t_id
-         WHERE types.type_orig_id = "{{{ type_id }}}"
+         WHERE types.type_orig_id IN ({{{ type_ids }}})
            AND s.sim_al > {{{ min_sim }}}
         ) p_ids
         JOIN p_typ ON p_typ.p_id = p_ids.p_id
-        JOIN types t ON t.t_id = p_typ.t_id AND t.type_orig_id <> "{{{ type_id }}}"
+        JOIN types t ON t.t_id = p_typ.t_id AND t.type_orig_id NOT IN ({{{ type_ids }}})
       GROUP BY t.t_id;
     params:
-      - name: type_id
+      - name: type_ids
         description: 'Type ID'
         widget: selectizeInput
         choices_query: types
+        multiple: true
       - name: min_sim
         description: 'min. similarity'
         widget: numericInput
