@@ -93,7 +93,7 @@ server <- function(input, output, session) {
                  }
                  df
                },
-      'json' = data.frame(jqr::jq(content, v$query) %>% yaml.load()),
+      'json' = data.frame(jqr::jq(content, make_query()) %>% yaml.load()),
       'sql'  = connect_and_query_db(make_query()),
     )
     t2 <- Sys.time()

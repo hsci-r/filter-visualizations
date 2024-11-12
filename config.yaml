@@ -782,8 +782,11 @@ visualizations:
     description: 'tree: Custom Octavo query'
     source: json
     url: 'https://filter-octavo.2.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.2.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query }}}&field=type_id&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level={{{ level }}}&sort=score&sortDirection=D'
-    query: '[ .result.docs[] | select(.type_id != null) | .type_id[] ] | group_by(.)
-            | { "type_id": map(.[0]), "y": map(length) }'
+    query: '[ .result.docs[] | select(.type_id != null) | .type_id[] ]
+            {{^incl_erab_orig}}
+            | map(select(. | test("erab_orig.*") | not))
+            {{/incl_erab_orig}}
+            | group_by(.) | { "type_id": map(.[0]), "y": map(length) }'
     params:
       - name: query
         description: 'Query'
@@ -793,6 +796,9 @@ visualizations:
         description: 'Level'
         widget: selectInput
         choices: [ VERSE, POEM ]
+      - name: incl_erab_orig
+        description: 'Include ERAB old type index'
+        widget: checkboxInput
   tree_custom_sql:
     type: tree
     description: 'tree: Custom SQL query'

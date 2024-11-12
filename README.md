@@ -88,7 +88,7 @@ following attributes:
   * `csv` -- data in CSV format, with source specified in the same way as for `json` (either by `content` or `url`)
 * `query`
   * if `source: sql`, a [{{mustache}}](https://mustache.github.io/mustache.5.html) template for an SQL query, using the parameters defined below
-  * if `source: json`, a [jq](https://manpages.org/jq) query for transforming the JSON data to a form needed by the visualization (e.g. for maps, aggregating the data by place)
+  * if `source: json`, a [{{mustache}}](https://mustache.github.io/mustache.5.html) template for a [jq](https://manpages.org/jq) query for transforming the JSON data to a form needed by the visualization (e.g. for maps, aggregating the data by place)
 * `url` - if `source: json` or `source: csv`, this is a [{{mustache}}](https://mustache.github.io/mustache.5.html) template producing an URL from which to fetch the data
 * `content` - if `source: json` or `source: csv`, this is a [{{mustache}}](https://mustache.github.io/mustache.5.html) template the string that contains the data directly (e.g. for inputting a CSV table as a parameter); only used if `url` is not given
 * `group_by`, `separate_by` - if `source: csv`, the content of the column specified by `separate_by` can be split on a given separator (e.g. if rows give a list of place IDs separated by `;`), and then aggregated by the column `group_by` (e.g. place ID)
