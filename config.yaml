@@ -442,6 +442,22 @@ visualizations:
         description: 'Level'
         widget: selectInput
         choices: [ VERSE, POEM ]
+  map_octavo_types:
+    type: map
+    description: 'map: Number of types for Octavo query'
+    source: json
+    url: 'https://filter-octavo.2.rahtiapp.fi/filter/search??pretty&endpoint=https%3A%2F%2Ffilter-octavo.2.rahtiapp.fi%2Ffilter%2F&fieldEnricher=&offsetDataConverter=&query={{{ query  }}}&field=place_id_direct&field=type_id_direct&offset=0&limit=-1&contextLevel=Sentence&contextExpandLeft=0&contextExpandRight=0&level=POEM&sort=score&sortDirection=D'
+    query: |
+        .result.docs | map(select(.type_id_direct != null))
+        | map([ .place_id_direct, .type_id_direct ])
+        | map(combinations) | group_by(.[0])
+        | { "place_id": map(.[0][0]),
+            "y": map( map(.[1]) | unique | length ) }
+    params:
+      - name: query
+        description: 'Query'
+        widget: textAreaInput
+        rows: 5
   map_custom_sql:
     type: map
     description: 'map: Custom SQL query'
