@@ -50,6 +50,7 @@ make_map <- function(df, input, maps, place.poly) {
                     n = input$map__classes,
                     style = input$map__style,
                     breaks = breaks,
+                    popup.vars = setdiff(names(df), c("pol_id", "name")),
                     as.count = (typeof(df$y) == 'integer'),
                     legend.format = list(
                       format = if(typeof(df$y) == 'integer') { "d" } else { "f" }),
