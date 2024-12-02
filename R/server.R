@@ -101,7 +101,7 @@ server <- function(input, output, session) {
       write_log_to_db(url, t2-t1, shinybrowser::get_user_agent())
     }
     # if all number are integers -- use the integer data type
-    if (all(data$y == as.integer(data$y))) {
+    if ((is.numeric(data$y)) && (all(data$y == as.integer(data$y), na.rm=T))) {
       data$y <- as.integer(data$y)
     }
     data
