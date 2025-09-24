@@ -166,9 +166,17 @@ server <- function(input, output, session) {
     },
     contentType = 'image/svg'
   )
+  output$dlMapHTML <- downloadHandler(
+    filename = function() paste0(substr(dl_filename(), 1, 50), '.html'),
+    content = function(file) {
+      tmap_save(tmap(), filename = file)
+    },
+    contentType = 'text/html'
+  )
 
   observeEvent(input$vis, toggleState('dlMapSVG', grepl('map_', input$vis)))
   observeEvent(input$vis, toggleState('dlMapPNG', grepl('map_', input$vis)))
+  observeEvent(input$vis, toggleState('dlMapHTML', grepl('map_', input$vis)))
 
   observeEvent(input$vis, {
     v <- config$visualizations[[input$vis]]

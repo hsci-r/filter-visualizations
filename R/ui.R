@@ -184,6 +184,7 @@ ui <- function(request) {
         downloadButton('dlData', 'Data'),
         disabled(downloadButton('dlMapPNG', 'Map (PNG)')),
         disabled(downloadButton('dlMapSVG', 'Map (SVG)')),
+        disabled(downloadButton('dlMapHTML', 'Map (HTML)')),
         hiddenIf(!interactive,
           actionButton(inputId = 'refresh', label='Refresh',
                        icon = icon('sync'), class='btn-primary')
