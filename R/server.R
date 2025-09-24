@@ -110,8 +110,9 @@ server <- function(input, output, session) {
 
   # output visualizations
   tmap <- reactive(make_map(get_data(), input, maps, place.poly))
+  type_tree <- reactive(make_type_tree(get_data(), input, types))
   output$tmap <- renderTmap(tmap())
-  output$tree <- renderPlotly(make_type_tree(get_data(), input, types))
+  output$tree <- renderPlotly(type_tree())
   output$plot <- renderPlot({
     v <- config$visualizations[[input$vis]]
     switch(v$type,
@@ -173,10 +174,19 @@ server <- function(input, output, session) {
     },
     contentType = 'text/html'
   )
+  output$dlTreeHTML <- downloadHandler(
+    filename = function() paste0(substr(dl_filename(), 1, 50), '.html'),
+    content = function(file) {
+      htmlwidgets::saveWidget(type_tree(), file)
+    },
+    contentType = 'text/html'
+  )
 
   observeEvent(input$vis, toggleState('dlMapSVG', grepl('map_', input$vis)))
   observeEvent(input$vis, toggleState('dlMapPNG', grepl('map_', input$vis)))
   observeEvent(input$vis, toggleState('dlMapHTML', grepl('map_', input$vis)))
+
+  observeEvent(input$vis, toggleState('dlTreeHTML', grepl('tree_', input$vis)))
 
   observeEvent(input$vis, {
     v <- config$visualizations[[input$vis]]
